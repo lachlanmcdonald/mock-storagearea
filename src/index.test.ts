@@ -1,4 +1,17 @@
-import { CHROME_LOCAL_STORAGE_DEFAULT_QUOTA, LocalStorageArea, ManagedStorageArea, CHROME_SYNC_STORAGE_DEFAULT_QUOTA, SessionStorageArea, SyncStorageArea, UNLIMITED_QUOTA, deserialise, onChangedFactory, serialise } from './index';
+import {
+	CHROME_LOCAL_STORAGE_DEFAULT_QUOTA,
+	CHROME_SYNC_STORAGE_DEFAULT_QUOTA,
+	UNLIMITED_QUOTA,
+	LocalStorageArea,
+	ManagedStorageArea,
+	SessionStorageArea,
+	SyncStorageArea,
+	StorageArea,
+	Store,
+	deserialise,
+	onChangedFactory,
+	serialise,
+} from './index';
 
 describe('Exports', () => {
 	test('CHROME_LOCAL_STORAGE_DEFAULT_QUOTA', () => {
@@ -29,15 +42,24 @@ describe('Exports', () => {
 		expect(SyncStorageArea).toBeTruthy();
 	});
 
-	test('deserialise', () => {
-		expect(deserialise).toBeTruthy();
+	test('StorageArea', () => {
+		expect(StorageArea).toBeTruthy();
 	});
 
-	test('serialise', () => {
-		expect(serialise).toBeTruthy();
+	test('Store', () => {
+		expect(Store).toBeTruthy();
+	});
+
+	test('deserialise', () => {
+		expect(deserialise).toBeTruthy();
 	});
 
 	test('onChangedFactory', () => {
 		expect(onChangedFactory).toBeTruthy();
 	});
+
+	test('serialise', () => {
+		expect(serialise).toBeTruthy();
+	});
 });
+
