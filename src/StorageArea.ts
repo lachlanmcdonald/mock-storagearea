@@ -123,11 +123,15 @@ export default class StorageArea {
 	/**
 	 * Gets one or more items from storage.
 	 */
-	get(keys: string | string[] | Record<string, any>) {
+	get(keys: string | string[] | Record<string, any> | null) {
 		try {
 			const lookup = {} as Record<string, { default?: any }>;
 
-			if (typeof keys === 'string') {
+			if (keys === null) {
+				Array.from(this.__unsafeInternalStore.keys()).forEach(key => {
+					lookup[key] = {};
+				});
+			} else if (typeof keys === 'string') {
 				lookup[keys] = {};
 			} else if (Array.isArray(keys)) {
 				keys.forEach((key, index) => {
