@@ -3,10 +3,10 @@
 __mock-storagearea__ is a implementation of Chrome's [extension storage interface](StorageArea) (as distinct from the [Web Storage API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API), such as [localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage).) It is primarily intended for use in development/testing of extensions outside of the browser context, i.e. to development of UI external to the extension or test automation.
 
 > __Notes:__ 
-> - Manifest V3 introduced support for promises, where as versions prior used a callback argument. This implementation does not attempt to be backwards compatible and will <u>only</u> support promises.
+> - Manifest V3 introduced support for promises, where as versions prior used a callback argument. This implementation does not attempt to be backwards compatible and will <u>only</u> support promises (and do not contain signatures for the callback parameters.)
 > - The chrome.storage documentation is often vague. Whilst an attempt has been made to identify and replicate any undocumented behaviour, some discrepancies may exist across versions and browsers.
 
-> __Beta release:__ The package version will remain in <u>beta</u> until it can be more thoroughly tested. Whilst the tests are comprehensive, some behaviour may not properly replicate that of Chrome. Please [raise an issue](https://github.com/lachlanmcdonald/mock-storagearea/issues) if you encounter an irregularity.
+> __Beta release:__ The package version will remain in <u>beta</u> until it can be more thoroughly tested in production. Whilst the existing tests are comprehensive, some behaviour may not properly replicate that of Chrome. Please [raise an issue](https://github.com/lachlanmcdonald/mock-storagearea/issues) if you encounter an irregularity.
 
 ## Usage
 
