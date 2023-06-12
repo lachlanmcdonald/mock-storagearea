@@ -1,5 +1,5 @@
 import { UNLIMITED_QUOTA } from './Constants';
-import { Store } from './Store';
+import Store from './Store';
 
 export type Payload = Iterable<any>
 

@@ -11,7 +11,7 @@ import { StoreChangeFactory, serialise, deserialise } from './utils';
  * Values in the __Store__ are serialised using using {@link utils.serialise}, and as such,
  * some values may throw an exception or be ignored.
  */
-export class Store {
+export default class Store {
 	private store: Map<string, string>;
 	private serialise: SerialiserFunction;
 	private deserialise: DeserialiserFunction;

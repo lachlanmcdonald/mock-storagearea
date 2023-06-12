@@ -1,6 +1,6 @@
 import { UNLIMITED_QUOTA } from './Constants';
 import OnChangedEventTarget from './OnChangedEventTarget';
-import { Store } from './Store';
+import Store from './Store';
 import { AccessLevel, DeserialiserFunction, Payload, Quotas, SerialiserFunction } from './Types';
 import { incrementWriteQuota, notifyEventTargets } from './utils';
 

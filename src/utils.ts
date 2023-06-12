@@ -1,6 +1,6 @@
 import OnChangedEventTarget from './OnChangedEventTarget';
 import StorageArea from './StorageArea';
-import { Store } from './Store';
+import Store from './Store';
 import { Changes, DeserialiserFunction, SerialiserFunction } from './Types';
 
 export const StoreChangeFactory = (before: Store, after: Store) => {
