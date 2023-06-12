@@ -173,6 +173,70 @@ describe('.clear()', () => {
 	});
 });
 
+describe('.get()', () => {
+	test('Returns a value when it exists', () => {
+		const k = new StorageArea([
+			['test', serialise(123)],
+		]);
+
+		expect(k.get('test')).resolves.toMatchObject({
+			test: 123,
+		});
+	});
+
+	test('Only returns keys which exist', () => {
+		const k = new StorageArea([
+			['test', serialise(123)],
+		]);
+
+		expect(k.get(['test', 'missingKey', 'otherKey'])).resolves.toMatchObject({
+			test: 123,
+		});
+	});
+
+	test('Returns default values for missing keys', () => {
+		const k = new StorageArea([
+			['test', serialise(123)],
+		]);
+
+		expect(k.get({
+			test: null,
+			missingKey: null,
+			otherKey: null,
+		})).resolves.toMatchObject({
+			test: 123,
+			missingKey: null,
+			otherKey: null,
+		});
+	});
+
+	test('Returns all keys if null is provided', () => {
+		const k = new StorageArea([
+			['a', serialise(123)],
+			['b', serialise(123)],
+			['c', serialise(123)],
+		]);
+
+		expect(k.get(null)).resolves.toMatchObject({
+			a: 123,
+			b: 123,
+			c: 123,
+		});
+	});
+
+	test('Returns an empty object if store is empty and null is provided', () => {
+		const k = new StorageArea();
+
+		expect(k.get(null)).resolves.toMatchObject({});
+	});
+
+	test('Returns an empty object if no keys exist and no default values provided', () => {
+		const k = new StorageArea();
+
+		expect(k.get(['a', 'b', 'c'])).resolves.toMatchObject({});
+	});
+});
+
 describe('.set()', () => {
 	test('Can set an item', () => {
 		const k = new StorageArea();
