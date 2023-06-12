@@ -30,8 +30,7 @@ const chrome = {
 
 > See: [API]
 
-
-### Adjusting quotas
+### Adjusting quotas
 
 Normally, quotas are defined by the browser and not configurable by the extension. However, for testing purposes, the quota constraints can be overwritten during initialisation:
 
