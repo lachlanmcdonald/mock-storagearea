@@ -333,7 +333,7 @@ describe('serialise()', () => {
 });
 
 
-describe.only('deepMergeObjects', () => {
+describe('deepMergeObjects', () => {
 	test('Merges over empty base', () => {
 		const baseObject = {};
 
