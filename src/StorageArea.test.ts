@@ -252,7 +252,10 @@ describe('.get()', () => {
 	 *     }, () => {
 	 *         window.chrome.storage.local.get({
 	 *             a: {
-	 *                 c: { e: 4567 },
+	 *                 c: {
+	 *                     e: 4567,
+	 *                     k: undefined,
+	 *                 },
 	 *             },
 	 *         }, data => {
 	 *             console.log(data);
@@ -284,6 +287,7 @@ describe('.get()', () => {
 				z: 999,
 				c: {
 					e: 4567,
+					k: undefined, // eslint-disable-line no-undefined
 				},
 			},
 		})).resolves.toMatchObject({
