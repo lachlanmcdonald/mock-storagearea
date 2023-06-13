@@ -7,7 +7,7 @@ import { UNLIMITED_QUOTA } from './Constants';
 import OnChangedEventTarget from './OnChangedEventTarget';
 import Store from './Store';
 import { AccessLevel, DeserialiserFunction, Payload, Quotas, SerialiserFunction } from './Types';
-import { incrementWriteQuota, notifyEventTargets } from './utils';
+import { deepMergeObjects, incrementWriteQuota, notifyEventTargets } from './utils';
 
 export default class StorageArea {
 	/**
@@ -156,9 +156,19 @@ export default class StorageArea {
 			const results = {} as Record<string, any>;
 
 			Object.keys(lookup).forEach(key => {
+				const hasDefault = Object.hasOwn(lookup[key], 'default');
+
 				if (this.__unsafeInternalStore.has(key)) {
-					results[key] = this.__unsafeInternalStore.get(key);
-				} else if (Object.hasOwn(lookup[key], 'default')) {
+					let temp = this.__unsafeInternalStore.get(key);
+
+					if (typeof temp === 'object') {
+						if (hasDefault) {
+							temp = deepMergeObjects(lookup[key].default, temp);
+						}
+					}
+
+					results[key] = temp;
+				} else if (hasDefault) {
 					results[key] = lookup[key].default;
 				}
 			});

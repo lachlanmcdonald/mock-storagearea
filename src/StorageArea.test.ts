@@ -240,6 +240,63 @@ describe('.get()', () => {
 
 		expect(k.get(['a', 'b', 'c'])).resolves.toMatchObject({});
 	});
+
+	/**
+	 * In Chrome, the following command:
+	 *
+	 *     window.chrome.storage.local.set({
+	 *         a: {
+	 *             b: 123,
+	 *             c: { d: 123 },
+	 *         },
+	 *     }, () => {
+	 *         window.chrome.storage.local.get({
+	 *             a: {
+	 *                 c: { e: 4567 },
+	 *             },
+	 *         }, data => {
+	 *             console.log(data);
+	 *         });
+	 *     });
+	 *
+	 * Will return:
+	 *
+	 *    {
+	 *        "a": {
+	 *            "b": 123,
+	 *            "c": {
+	 *                "d": 123,
+	 *                "e": 4567
+	 *            }
+	 *        }
+	 *    }
+	 */
+	test('Returns full objects when a default is provided on a nested object', () => {
+		const k = new StorageArea([
+			['a', serialise({
+				b: 123,
+				c: { d: 123 },
+			})],
+		]);
+
+		expect(k.get({
+			a: {
+				z: 999,
+				c: {
+					e: 4567,
+				},
+			},
+		})).resolves.toMatchObject({
+			a: {
+				b: 123,
+				z: 999,
+				c: {
+					d: 123,
+					e: 4567,
+				},
+			},
+		});
+	});
 });
 
 describe('.set()', () => {
