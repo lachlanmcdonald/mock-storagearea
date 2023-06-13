@@ -14,6 +14,14 @@
 		"name": "Lachlan McDonald",
 		"url": "https://github.com/lachlanmcdonald"
 	},
+	"bugs": {
+		"url": "https://github.com/lachlanmcdonald/mock-storagearea/issues"
+	},
+	"homepage": "https://github.com/lachlanmcdonald/mock-storagearea",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/lachlanmcdonald/mock-storagearea.git"
+	},
 	"license": "MIT",
 	"devDependencies": {
 		"@lachlanmcdonald/eslint-config-eslint": "^0.4.2",
