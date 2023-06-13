@@ -11,6 +11,7 @@ __Notes:__
 - [Manifest V3 introduced support for promises](https://developer.chrome.com/docs/extensions/mv3/promises/), where as versions prior used a callback argument. This implementation <u>is not</u>  backwards-compatible and only supports promises.
 - The `chrome.storage` documentation is often vague. Whilst attempts have been made to identify and replicate any undocumented behaviour, some discrepancies may exist across versions and browsers.
 - Whilst behaviour was validated on the Chrome browser, this library should also function similarly with browsers which implement the [Chromium-based extension API](https://developer.chrome.com/docs/extensions/reference/).
+- Due to the usage of `structuredClone`, This package supports Node version 18.x and up. See [support tables for browsers](https://caniuse.com/?search=structuredClone).
 
 ## Usage
 
