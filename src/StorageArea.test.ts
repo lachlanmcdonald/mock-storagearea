@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2023 Lachlan McDonald. All rights reserved.
+ * This file is licensed under the MIT License
+ * https://github.com/lachlanmcdonald/mock-storagearea
+ */
 import { UNLIMITED_QUOTA } from './Constants';
 import StorageArea from './StorageArea';
 import { AccessLevel, DeserialiserFunction, SerialiserFunction } from './Types';

@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2023 Lachlan McDonald. All rights reserved.
+ * This file is licensed under the MIT License
+ * https://github.com/lachlanmcdonald/mock-storagearea
+ */
+
 /**
  * Unlimited quota.
  */
