@@ -9,23 +9,27 @@ import { StorageChanges } from './Types';
 const EVENT_NAME = 'changed';
 
 export default function OnChangedEvent<H extends(...args: any) => void>() {
-	const registered = new Map() as Map<H, (event: CustomEvent) => void>;
+	const registered = new Map() as Map<H, (event: Event) => void>;
 	const eventTarget = new EventTarget();
+
+	/**
+	 * As Node does not support `CustomEvent`, and extending an `Event` will cause
+	 * issues with TypeScript and `EventTarget`, the data is just stored and retrieved separately.
+	 */
+	const eventData = new WeakMap() as WeakMap<Event, any>;
 
 	/**
 	 * Registers an event listener callback to an event.
 	 */
 	function addListener(callback: H) {
-		const handleEvent = (event: CustomEvent) => {
-			if (event && Object.hasOwn(event, 'detail')) {
-				const {changes} = event.detail;
-
-				callback(changes);
+		const handleEvent = (event: Event) => {
+			if (eventData.has(event)) {
+				callback(eventData.get(event));
 			}
 		};
 
 		registered.set(callback, handleEvent);
-		eventTarget.addEventListener(EVENT_NAME, callback);
+		eventTarget.addEventListener(EVENT_NAME, handleEvent);
 	}
 
 	/**
@@ -59,12 +63,9 @@ export default function OnChangedEvent<H extends(...args: any) => void>() {
 	 * a _Storage Area_.
 	 */
 	function dispatch(changes: StorageChanges) {
-		const e = new CustomEvent(EVENT_NAME, {
-			detail: {
-				changes,
-			},
-		});
+		const e = new Event(EVENT_NAME);
 
+		eventData.set(e, changes);
 		eventTarget.dispatchEvent(e);
 	}
 
