@@ -4,7 +4,7 @@
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
 import Store from './Store';
-import { serialise } from './utils';
+import { serialise } from './utils/serialiser';
 
 describe('.clone()', () => {
 	test('Stores are identical after cloning', () => {
@@ -24,7 +24,7 @@ describe('.clone()', () => {
 });
 
 describe('.get()', () => {
-	test('Returns an unserialised value', () => {
+	test('Returns an deserialised value', () => {
 		const k = new Store([
 			['test', serialise(123)],
 		]);

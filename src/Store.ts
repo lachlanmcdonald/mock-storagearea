@@ -4,7 +4,8 @@
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
 import { DeserialiserFunction, PropertyChanges, SerialiserFunction } from './Types';
-import { StoreChangeFactory, serialise, deserialise } from './utils';
+import StoreChangeFactory from './utils/StoreChangeFactory';
+import { deserialise, serialise } from './utils/serialiser';
 
 /**
  * A __Store__ represents the underlying data structure of a __StorageArea__.

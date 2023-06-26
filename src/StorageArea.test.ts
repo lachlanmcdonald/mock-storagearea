@@ -6,7 +6,7 @@
 import { UNLIMITED_QUOTA } from './Constants';
 import StorageArea from './StorageArea';
 import { AccessLevel, DeserialiserFunction, SerialiserFunction } from './Types';
-import { serialise } from './utils';
+import { serialise } from './utils/serialiser';
 
 describe('constructor()', () => {
 	test('Store is empty by default', () => {

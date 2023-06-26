@@ -7,7 +7,9 @@ import { UNLIMITED_QUOTA } from './Constants';
 import OnChangedEventTarget from './OnChangedEventTarget';
 import Store from './Store';
 import { AccessLevel, DeserialiserFunction, Payload, Quotas, SerialiserFunction } from './Types';
-import { deepMergeObjects, incrementWriteQuota, notifyEventTargets } from './utils';
+import incrementWriteQuota from './utils/incrementWriteQuota';
+import notifyEventTargets from './utils/notifyEventTargets';
+import deepMergeObjects from './utils/deepMergeObjects';
 
 export default class StorageArea {
 	/**
