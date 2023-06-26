@@ -23,19 +23,6 @@
 				"ts-expect-error": "allow-with-description",
 				"minimumDescriptionLength": 10
 			}
-		],
-		"no-underscore-dangle": [
-			"warn",
-			{
-				"allow": [
-					"__unsafeInternalStore",
-					"__quotas",
-					"__areaName",
-					"__eventTargets",
-					"__serialiser",
-					"__deserialiser"
-				]
-			}
 		]
 	}
 }

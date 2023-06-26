@@ -3,7 +3,7 @@
  * This file is licensed under the MIT License
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
-import { CHROME_LOCAL_STORAGE_DEFAULT_QUOTA, CHROME_SESSION_STORAGE_DEFAULT_QUOTA, CHROME_SYNC_STORAGE_DEFAULT_QUOTA, UNLIMITED_QUOTA } from './Constants';
+import { CHROME_LOCAL_STORAGE_DEFAULT_QUOTA, CHROME_SESSION_STORAGE_DEFAULT_QUOTA, CHROME_SYNC_STORAGE_DEFAULT_QUOTA } from './Constants';
 import { LocalStorageArea, ManagedStorageArea, SessionStorageArea, StorageAreaFactory, SyncStorageArea } from './StorageAreaFactory';
 import { AccessLevel, DeserialiserFunction, SerialiserFunction } from './Types';
 import { serialise } from './utils/serialiser';
@@ -508,36 +508,6 @@ describe('StorageAreaFactory()', () => {
 			expect(k.get('a')).resolves.toMatchObject({
 				a: 'original',
 			});
-		});
-	});
-
-	describe('.__unsafeInternalStore', () => {
-		test('Can access __unsafeInternalStore property', () => {
-			const k = StorageAreaFactory();
-
-			expect(k).toHaveProperty('__unsafeInternalStore');
-		});
-	});
-
-	describe('.__quotas', () => {
-		test('Can access __quotas property', () => {
-			const k = StorageAreaFactory();
-
-			expect(k).toHaveProperty('__quotas');
-
-			expect(k).toMatchObject({
-				...UNLIMITED_QUOTA,
-				writeOperationsPerHour: {},
-				writeOperationsPerMinute: {},
-			});
-		});
-	});
-
-	describe('.__eventTargets', () => {
-		test('Can access __eventTargets property', () => {
-			const k = StorageAreaFactory();
-
-			expect(k).toHaveProperty('__eventTargets');
 		});
 	});
 

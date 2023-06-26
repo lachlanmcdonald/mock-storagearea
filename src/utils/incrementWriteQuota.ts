@@ -7,7 +7,8 @@
 /**
  * Records a write in the cache or throws if doing so would exceed the specified limits.
  *
- * __Note:__ This operation directly modifies `writesPerHourCache` and `writesPerMinuteCache`.
+ * __Note:__ This operation directly modifies `writesPerHourCache` and `writesPerMinuteCache`
+ * (as they are passed by reference.)
  *
  * @param maxWritesPerHour Maximum number of writes per hour
  * @param maxWritesPerMinute Maximum number of writes per minute
