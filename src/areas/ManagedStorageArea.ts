@@ -3,7 +3,7 @@
  * This file is licensed under the MIT License
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
-import StorageArea from './StorageArea';
+import StorageArea from '../StorageArea';
 
 export default class ManagedStorageArea extends StorageArea {
 	__areaName = 'managed';

@@ -3,7 +3,7 @@
  * This file is licensed under the MIT License
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
-import LocalStorageArea from '../LocalStorageArea';
+import LocalStorageArea from '../areas/LocalStorageArea';
 import onChangedFactory from './onChangedFactory';
 import { serialise } from './serialiser';
 
