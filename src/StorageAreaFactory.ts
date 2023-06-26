@@ -7,7 +7,7 @@
 import { CHROME_LOCAL_STORAGE_DEFAULT_QUOTA, CHROME_SESSION_STORAGE_DEFAULT_QUOTA, CHROME_SYNC_STORAGE_DEFAULT_QUOTA, UNLIMITED_QUOTA } from './Constants';
 import OnChangedEvent from './OnChangedEvent';
 import Store from './Store';
-import { Changes, DeserialiserFunction, Quotas, SerialiserFunction, SetAccessLevelOptions, StorageAreaQuota, StorageChanges } from './Types';
+import { Changes, Quotas, SetAccessLevelOptions, StorageAreaQuota, StorageChanges } from './Types';
 import deepMergeObjects from './utils/deepMergeObjects';
 import incrementWriteQuota from './utils/incrementWriteQuota';
 
@@ -40,7 +40,7 @@ const dispatchEvent = (dispatcher: (changes: StorageChanges) => void, changes: C
 	dispatcher(temp);
 };
 
-export function StorageAreaFactory(payload?: Iterable<any>, testQuotas?: Quotas, testSerialiser?: SerialiserFunction, testDeserialiser?: DeserialiserFunction) {
+export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quotas) {
 	/**
 	 * Internal quota limits and usage.
 	 */
@@ -49,7 +49,7 @@ export function StorageAreaFactory(payload?: Iterable<any>, testQuotas?: Quotas,
 	/**
 	 * Internal store.
 	 */
-	let store = new Store(typeof payload === 'undefined' ? [] : payload, testSerialiser, testDeserialiser);
+	const store = initialStore ? initialStore : new Store();
 
 	/**
 	 * Event handlers
@@ -74,7 +74,7 @@ export function StorageAreaFactory(payload?: Iterable<any>, testQuotas?: Quotas,
 			incrementWriteQuota(MAX_WRITE_OPERATIONS_PER_HOUR, MAX_WRITE_OPERATIONS_PER_MINUTE, writeOperationsPerHour, writeOperationsPerMinute);
 			const changes = store.clear();
 
-			store = changes.after;
+			store.store = changes.after.store;
 			dispatchEvent(dispatch, changes);
 			return Promise.resolve();
 		} catch (e) {
@@ -200,7 +200,7 @@ export function StorageAreaFactory(payload?: Iterable<any>, testQuotas?: Quotas,
 			incrementWriteQuota(MAX_WRITE_OPERATIONS_PER_HOUR, MAX_WRITE_OPERATIONS_PER_MINUTE, writeOperationsPerHour, writeOperationsPerMinute);
 			const changes = store.delete(keys);
 
-			store = changes.after;
+			store.store = changes.after.store;
 			dispatchEvent(dispatch, changes);
 			return Promise.resolve();
 		} catch (e) {
@@ -240,7 +240,7 @@ export function StorageAreaFactory(payload?: Iterable<any>, testQuotas?: Quotas,
 					}
 				});
 
-				store = changes.after;
+				store.store = changes.after.store;
 				dispatchEvent(dispatch, changes);
 				return Promise.resolve();
 			}
@@ -282,34 +282,34 @@ export function StorageAreaFactory(payload?: Iterable<any>, testQuotas?: Quotas,
 	});
 }
 
-export function SyncStorageArea(payload?: Iterable<any>, testQuotas?: Quotas, testSerialiser?: SerialiserFunction, testDeserialiser?: DeserialiserFunction) {
+export function SyncStorageArea(initialStore?: Store, testQuotas?: Quotas) {
 	const quotas = {
 		...CHROME_SYNC_STORAGE_DEFAULT_QUOTA,
 		...testQuotas || {},
 	};
 
-	return StorageAreaFactory(payload, quotas, testSerialiser, testDeserialiser);
+	return StorageAreaFactory(initialStore, quotas);
 }
 
-export function LocalStorageArea(payload?: Iterable<any>, testQuotas?: Quotas, testSerialiser?: SerialiserFunction, testDeserialiser?: DeserialiserFunction) {
+export function LocalStorageArea(initialStore?: Store, testQuotas?: Quotas) {
 	const quotas = {
 		...CHROME_LOCAL_STORAGE_DEFAULT_QUOTA,
 		...testQuotas || {},
 	};
 
-	return StorageAreaFactory(payload, quotas, testSerialiser, testDeserialiser);
+	return StorageAreaFactory(initialStore, quotas);
 }
 
-export function SessionStorageArea(payload?: Iterable<any>, testQuotas?: Quotas, testSerialiser?: SerialiserFunction, testDeserialiser?: DeserialiserFunction) {
+export function SessionStorageArea(initialStore?: Store, testQuotas?: Quotas) {
 	const quotas = {
 		...CHROME_SESSION_STORAGE_DEFAULT_QUOTA,
 		...testQuotas || {},
 	};
 
-	return StorageAreaFactory(payload, quotas, testSerialiser, testDeserialiser);
+	return StorageAreaFactory(initialStore, quotas);
 }
 
-export function ManagedStorageArea(payload?: Iterable<any>, testQuotas?: Quotas, testSerialiser?: SerialiserFunction, testDeserialiser?: DeserialiserFunction) {
+export function ManagedStorageArea(initialStore?: Store, testQuotas?: Quotas) {
 	const quotas = {
 		...CHROME_LOCAL_STORAGE_DEFAULT_QUOTA,
 		...testQuotas || {},
@@ -351,7 +351,7 @@ export function ManagedStorageArea(payload?: Iterable<any>, testQuotas?: Quotas,
 	}
 
 	return Object.freeze({
-		...StorageAreaFactory(payload, quotas, testSerialiser, testDeserialiser),
+		...StorageAreaFactory(initialStore, quotas),
 		clear,
 		remove,
 		set,

@@ -5,6 +5,7 @@
  */
 import { CHROME_LOCAL_STORAGE_DEFAULT_QUOTA, CHROME_SESSION_STORAGE_DEFAULT_QUOTA, CHROME_SYNC_STORAGE_DEFAULT_QUOTA } from './Constants';
 import { LocalStorageArea, ManagedStorageArea, SessionStorageArea, StorageAreaFactory, SyncStorageArea } from './StorageAreaFactory';
+import Store from './Store';
 import { AccessLevel, DeserialiserFunction, SerialiserFunction } from './Types';
 import { serialise } from './utils/serialiser';
 
@@ -16,18 +17,18 @@ describe('StorageAreaFactory()', () => {
 	});
 
 	test('Store can be initialised with an existing payload', () => {
-		const k = StorageAreaFactory([
+		const k = StorageAreaFactory(new Store([
 			['value0', serialise(1234)],
 			['value1', serialise(1234)],
 			['value2', serialise(1234)],
 			['value3', serialise(1234)],
-		]);
+		]));
 
 		expect(k.getBytesInUse(null)).resolves.toBe(40);
 	});
 
 	test('Store can be initialised with quota overrides', () => {
-		const k = StorageAreaFactory([], {
+		const k = StorageAreaFactory(null, {
 			MAX_ITEMS: 128,
 		});
 
@@ -45,12 +46,12 @@ describe('StorageAreaFactory()', () => {
 			return 4;
 		};
 
-		const k = StorageAreaFactory([
+		const k = StorageAreaFactory(new Store([
 			['value0', newSerialiser(1234)],
 			['value1', newSerialiser(1234)],
 			['value2', newSerialiser(1234)],
 			['value3', newSerialiser(1234)],
-		], {}, newSerialiser, newDeserialiser);
+		], newSerialiser, newDeserialiser));
 
 		expect(k.getBytesInUse(null)).resolves.toBe(64);
 
@@ -82,12 +83,12 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Returns the correct size when storage contains values', () => {
-			const k = StorageAreaFactory([
+			const k = StorageAreaFactory(new Store([
 				['value0', serialise(1234)],
 				['value1', serialise(1234)],
 				['value2', serialise(1234)],
 				['value3', serialise(1234)],
-			]);
+			]));
 
 			expect(k.getBytesInUse(null)).resolves.toBe(40);
 		});
@@ -115,11 +116,11 @@ describe('StorageAreaFactory()', () => {
 
 	describe('.clear()', () => {
 		test('Removes all existing items', () => {
-			const k = StorageAreaFactory([
+			const k = StorageAreaFactory(new Store([
 				['red', serialise(140)],
 				['blue', serialise(220)],
 				['green', serialise(790)],
-			]);
+			]));
 
 			expect(k.getBytesInUse(null)).resolves.toBe(21);
 			expect(k.clear()).resolves.not.toThrow();
@@ -127,7 +128,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_HOUR is exceeded', () => {
-			const k = StorageAreaFactory([], {
+			const k = StorageAreaFactory(null, {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 			});
 
@@ -137,7 +138,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_MINUTE is exceeded', () => {
-			const k = StorageAreaFactory([], {
+			const k = StorageAreaFactory(null, {
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
 
@@ -147,7 +148,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Rejects MAX_WRITE_OPERATIONS_PER_HOUR before MAX_WRITE_OPERATIONS_PER_MINUTE', () => {
-			const k = StorageAreaFactory([], {
+			const k = StorageAreaFactory(null, {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
@@ -158,9 +159,9 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Failed operations due to an exceeded quota will not modify state', () => {
-			const k = StorageAreaFactory([
+			const k = StorageAreaFactory(new Store([
 				['a', serialise('original')],
-			], {
+			]), {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 			});
 
@@ -178,9 +179,9 @@ describe('StorageAreaFactory()', () => {
 
 	describe('.get()', () => {
 		test('Returns a value when it exists', () => {
-			const k = StorageAreaFactory([
+			const k = StorageAreaFactory(new Store([
 				['test', serialise(123)],
-			]);
+			]));
 
 			expect(k.get('test')).resolves.toMatchObject({
 				test: 123,
@@ -188,9 +189,9 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Only returns keys which exist', () => {
-			const k = StorageAreaFactory([
+			const k = StorageAreaFactory(new Store([
 				['test', serialise(123)],
-			]);
+			]));
 
 			expect(k.get(['test', 'missingKey', 'otherKey'])).resolves.toMatchObject({
 				test: 123,
@@ -198,9 +199,9 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Returns default values for missing keys', () => {
-			const k = StorageAreaFactory([
+			const k = StorageAreaFactory(new Store([
 				['test', serialise(123)],
-			]);
+			]));
 
 			expect(k.get({
 				test: null,
@@ -214,11 +215,11 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Returns all keys if null is provided', () => {
-			const k = StorageAreaFactory([
+			const k = StorageAreaFactory(new Store([
 				['a', serialise(123)],
 				['b', serialise(123)],
 				['c', serialise(123)],
-			]);
+			]));
 
 			expect(k.get(null)).resolves.toMatchObject({
 				a: 123,
@@ -273,12 +274,12 @@ describe('StorageAreaFactory()', () => {
 		 *    }
 		 */
 		test('Returns full objects when a default is provided on a nested object', () => {
-			const k = StorageAreaFactory([
+			const k = StorageAreaFactory(new Store([
 				['a', serialise({
 					b: 123,
 					c: { d: 123 },
 				})],
-			]);
+			]));
 
 			expect(k.get({
 				a: {
@@ -311,7 +312,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_HOUR is exceeded', () => {
-			const k = StorageAreaFactory([], {
+			const k = StorageAreaFactory(null, {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 			});
 
@@ -331,7 +332,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_MINUTE is exceeded', () => {
-			const k = StorageAreaFactory([], {
+			const k = StorageAreaFactory(null, {
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
 
@@ -351,7 +352,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Rejects MAX_WRITE_OPERATIONS_PER_HOUR before MAX_WRITE_OPERATIONS_PER_MINUTE', () => {
-			const k = StorageAreaFactory([], {
+			const k = StorageAreaFactory(null, {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
@@ -372,7 +373,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Will reject with an error if MAX_ITEMS is exceeded', () => {
-			const k = StorageAreaFactory([], {
+			const k = StorageAreaFactory(null, {
 				MAX_ITEMS: 3,
 			});
 
@@ -387,7 +388,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Will reject with an error if QUOTA_BYTES is exceeded', () => {
-			const k = StorageAreaFactory([], {
+			const k = StorageAreaFactory(null, {
 				QUOTA_BYTES: 64,
 			});
 
@@ -402,7 +403,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Will reject with an error if QUOTA_BYTES_PER_ITEM is exceeded', () => {
-			const k = StorageAreaFactory([], {
+			const k = StorageAreaFactory(null, {
 				QUOTA_BYTES_PER_ITEM: 32,
 			});
 
@@ -412,9 +413,9 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Failed operations due to an exceeded quota will not modify state', () => {
-			const k = StorageAreaFactory([
+			const k = StorageAreaFactory(new Store([
 				['a', serialise('original')],
-			], {
+			]), {
 				QUOTA_BYTES_PER_ITEM: 32,
 			});
 
@@ -430,23 +431,23 @@ describe('StorageAreaFactory()', () => {
 
 	describe('.remove()', () => {
 		test('Can remove a key', () => {
-			const k = StorageAreaFactory([
+			const k = StorageAreaFactory(new Store([
 				['value0', serialise(1234)],
 				['value1', serialise(1234)],
 				['value2', serialise(1234)],
 				['value3', serialise(1234)],
-			]);
+			]));
 
 			expect(k.remove('value0')).resolves.not.toThrow();
 		});
 
 		test('Can remove keys', () => {
-			const k = StorageAreaFactory([
+			const k = StorageAreaFactory(new Store([
 				['value0', serialise(1234)],
 				['value1', serialise(1234)],
 				['value2', serialise(1234)],
 				['value3', serialise(1234)],
-			]);
+			]));
 
 			expect(k.remove(['value0', 'value1'])).resolves.not.toThrow();
 		});
@@ -464,7 +465,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_HOUR is exceeded', () => {
-			const k = StorageAreaFactory([], {
+			const k = StorageAreaFactory(null, {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 			});
 
@@ -474,7 +475,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_MINUTE is exceeded', () => {
-			const k = StorageAreaFactory([], {
+			const k = StorageAreaFactory(null, {
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
 
@@ -484,7 +485,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Rejects MAX_WRITE_OPERATIONS_PER_HOUR before MAX_WRITE_OPERATIONS_PER_MINUTE', () => {
-			const k = StorageAreaFactory([], {
+			const k = StorageAreaFactory(null, {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
@@ -495,9 +496,9 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Failed operations due to an exceeded quota will not modify state', () => {
-			const k = StorageAreaFactory([
+			const k = StorageAreaFactory(new Store([
 				['a', serialise('original')],
-			], {
+			]), {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 			});
 

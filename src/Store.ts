@@ -18,9 +18,10 @@ import { deserialise, serialise } from './utils/serialiser';
  * some values may throw an exception or be ignored.
  */
 export default class Store {
-	private store: Map<string, string>;
 	private serialise: SerialiserFunction;
 	private deserialise: DeserialiserFunction;
+
+	store: Map<string, string>;
 
 	/**
 	 * Initialises a new instance of Store with the optional payload
