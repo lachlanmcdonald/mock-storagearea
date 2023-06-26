@@ -7,7 +7,7 @@
 import { CHROME_LOCAL_STORAGE_DEFAULT_QUOTA, CHROME_SESSION_STORAGE_DEFAULT_QUOTA, CHROME_SYNC_STORAGE_DEFAULT_QUOTA, UNLIMITED_QUOTA } from './Constants';
 import OnChangedEvent from './OnChangedEvent';
 import Store from './Store';
-import { Changes, Quotas, SetAccessLevelOptions, StorageAreaQuota, StorageChanges } from './Types';
+import { Changes, Quota, Quotas, SetAccessLevelOptions, StorageAreaQuota, StorageChanges } from './Types';
 import deepMergeObjects from './utils/deepMergeObjects';
 import incrementWriteQuota from './utils/incrementWriteQuota';
 
@@ -282,39 +282,27 @@ export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quo
 	});
 }
 
-export function SyncStorageArea(initialStore?: Store, testQuotas?: Quotas) {
-	const quotas = {
-		...CHROME_SYNC_STORAGE_DEFAULT_QUOTA,
-		...testQuotas || {},
-	};
+type NoQuotaStorageArea = Readonly<Omit<ReturnType<typeof StorageAreaFactory>, Quota>>
+type FixedQuotaStorageArea<Q> = Readonly<Omit<ReturnType<typeof StorageAreaFactory>, Quota> & Q>
 
-	return StorageAreaFactory(initialStore, quotas);
+type SyncStorageAreaInterface = FixedQuotaStorageArea<typeof CHROME_SYNC_STORAGE_DEFAULT_QUOTA>
+type LocalStorageAreaInterface = FixedQuotaStorageArea<typeof CHROME_LOCAL_STORAGE_DEFAULT_QUOTA>
+type SessionStorageAreaInterface = FixedQuotaStorageArea<typeof CHROME_SESSION_STORAGE_DEFAULT_QUOTA>
+type ManagedStorageAreaInterface = NoQuotaStorageArea
+
+export function SyncStorageArea(initialStore?: Store) {
+	return StorageAreaFactory(initialStore, CHROME_SYNC_STORAGE_DEFAULT_QUOTA) as SyncStorageAreaInterface;
 }
 
-export function LocalStorageArea(initialStore?: Store, testQuotas?: Quotas) {
-	const quotas = {
-		...CHROME_LOCAL_STORAGE_DEFAULT_QUOTA,
-		...testQuotas || {},
-	};
-
-	return StorageAreaFactory(initialStore, quotas);
+export function LocalStorageArea(initialStore?: Store) {
+	return StorageAreaFactory(initialStore, CHROME_LOCAL_STORAGE_DEFAULT_QUOTA) as LocalStorageAreaInterface;
 }
 
-export function SessionStorageArea(initialStore?: Store, testQuotas?: Quotas) {
-	const quotas = {
-		...CHROME_SESSION_STORAGE_DEFAULT_QUOTA,
-		...testQuotas || {},
-	};
-
-	return StorageAreaFactory(initialStore, quotas);
+export function SessionStorageArea(initialStore?: Store) {
+	return StorageAreaFactory(initialStore, CHROME_SESSION_STORAGE_DEFAULT_QUOTA) as SessionStorageAreaInterface;
 }
 
-export function ManagedStorageArea(initialStore?: Store, testQuotas?: Quotas) {
-	const quotas = {
-		...CHROME_LOCAL_STORAGE_DEFAULT_QUOTA,
-		...testQuotas || {},
-	};
-
+export function ManagedStorageArea(initialStore?: Store) {
 	/**
 	 * Removes all items from the _Storage Area_.
 	 */
@@ -351,9 +339,16 @@ export function ManagedStorageArea(initialStore?: Store, testQuotas?: Quotas) {
 	}
 
 	return Object.freeze({
-		...StorageAreaFactory(initialStore, quotas),
+		...StorageAreaFactory(initialStore),
 		clear,
 		remove,
 		set,
-	});
+	}) as ManagedStorageAreaInterface;
 }
+
+// type Except<K, V> = Exclude<K, Extract<K, V>>
+// type Mutable<T> = {
+//     -readonly[P in keyof T]: T[P]
+// };
+// type StorageAreaFactoryWithQuota<K> = Readonly<Exclude<ReturnType<typeof StorageAreaFactory>, Except<Quota, keyof K>>>
+// type B = Except<Quota, keyof typeof CHROME_LOCAL_STORAGE_DEFAULT_QUOTA>

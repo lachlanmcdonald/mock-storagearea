@@ -1,3 +1,4 @@
+
 /*
 * Copyright (c) 2023 Lachlan McDonald. All rights reserved.
 * This file is licensed under the MIT License
@@ -7,3 +8,4 @@ export * from './Constants';
 export { deserialise, serialise } from './utils/serialiser';
 export { StorageAreaFactory, SyncStorageArea, LocalStorageArea, SessionStorageArea, ManagedStorageArea } from './StorageAreaFactory';
 export { default as Store } from './Store';
+export { default as onChanged } from './onChanged';

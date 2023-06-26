@@ -14,6 +14,8 @@ import {
 	SyncStorageArea,
 	deserialise,
 	serialise,
+	Store,
+	onChanged,
 } from './index';
 
 describe('Exports', () => {
@@ -55,5 +57,13 @@ describe('Exports', () => {
 
 	test('serialise', () => {
 		expect(serialise).toBeTruthy();
+	});
+
+	test('Store', () => {
+		expect(Store).toBeTruthy();
+	});
+
+	test('onChanged', () => {
+		expect(onChanged).toBeTruthy();
 	});
 });

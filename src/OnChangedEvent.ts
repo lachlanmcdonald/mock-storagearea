@@ -8,7 +8,9 @@ import { StorageChanges } from './Types';
 
 const EVENT_NAME = 'changed';
 
-export default function OnChangedEvent<H extends(...args: any) => void>() {
+type StorageChangeCallback = (changes: StorageChanges, areaName?: string) => void;
+
+export default function OnChangedEvent<H extends StorageChangeCallback>() {
 	const registered = new Map() as Map<H, (event: Event) => void>;
 	const eventTarget = new EventTarget();
 
@@ -24,12 +26,14 @@ export default function OnChangedEvent<H extends(...args: any) => void>() {
 	function addListener(callback: H) {
 		const handleEvent = (event: Event) => {
 			if (eventData.has(event)) {
-				callback(eventData.get(event));
+				const { changes, areaName } = eventData.get(event);
+
+				callback(changes, areaName);
 			}
 		};
 
-		registered.set(callback, handleEvent);
 		eventTarget.addEventListener(EVENT_NAME, handleEvent);
+		registered.set(callback, handleEvent);
 	}
 
 	/**
@@ -39,7 +43,9 @@ export default function OnChangedEvent<H extends(...args: any) => void>() {
 		const k = registered.has(callback);
 
 		if (k) {
-			eventTarget.removeEventListener(EVENT_NAME, registered.get(callback) as H);
+			const handleEvent = registered.get(callback) as (event: Event) => void;
+
+			eventTarget.removeEventListener(EVENT_NAME, handleEvent);
 			registered.delete(callback);
 		}
 	}
@@ -62,10 +68,10 @@ export default function OnChangedEvent<H extends(...args: any) => void>() {
 	 * Dispatches a new event which indicates a change has occurred within
 	 * a _Storage Area_.
 	 */
-	function dispatch(changes: StorageChanges) {
+	function dispatch(changes: StorageChanges, areaName?: string) {
 		const e = new Event(EVENT_NAME);
 
-		eventData.set(e, changes);
+		eventData.set(e, { changes, areaName });
 		eventTarget.dispatchEvent(e);
 	}
 
