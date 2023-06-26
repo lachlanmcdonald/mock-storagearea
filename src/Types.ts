@@ -7,12 +7,6 @@ import { UNLIMITED_QUOTA } from './Constants';
 import Store from './Store';
 
 /**
- * Initial payload for the mock _Storage Area_. The payload should be a value that
- * is accepted by the `Map` constructor.
- */
-export type Payload = Iterable<any>
-
-/**
  * A function which serialises a value for storage within a Storage Area.
  * - If a string is returned, the property has been successfully serialised.
  * - If `null` is returned, the property should be omitted. Please note that serialise() may also
@@ -24,13 +18,6 @@ export type SerialiserFunction = (value: unknown, parentIsArray?: boolean, paren
  * Deserialises a value previously serialised by {@link SerialiserFunction}.
  */
 export type DeserialiserFunction = (value: string) => any
-
-export type OnChangedChanges = {
-	[key: string]: {
-		oldValue: any,
-		newValue: any,
-	}
-}
 
 export interface StorageAreaQuota {
 	MAX_ITEMS: number
@@ -52,7 +39,10 @@ export interface StorageChange {
 
 export type StorageChanges = Record<string, StorageChange>
 
-export type OnChangedListener = (changes: OnChangedChanges, areaName: string) => void;
+/**
+ * @TODO There will be two OnChangedListener's as one will include an `areaName`.
+ */
+export type OnChangedListener = (changes: StorageChanges) => void;
 
 export type Quota = keyof typeof UNLIMITED_QUOTA
 

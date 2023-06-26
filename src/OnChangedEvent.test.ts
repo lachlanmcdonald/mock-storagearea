@@ -4,7 +4,7 @@
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
 import OnChangedEvent from './OnChangedEvent';
-import { OnChangedChanges, OnChangedListener } from './Types';
+import { StorageChanges, OnChangedListener } from './Types';
 
 describe('OnChangedEvent()', () => {
 	let onChanged: ReturnType<typeof OnChangedEvent>['external'];
@@ -23,7 +23,7 @@ describe('OnChangedEvent()', () => {
 				oldValue: 1,
 				newValue: 2,
 			},
-		} as OnChangedChanges;
+		} as StorageChanges;
 
 		const handler: OnChangedListener = changes => {
 			expect(changes).toMatchObject(inputChanges);
