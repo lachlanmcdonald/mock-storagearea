@@ -6,7 +6,7 @@
 import { UNLIMITED_QUOTA } from './Constants';
 import OnChangedEventTarget from './OnChangedEventTarget';
 import Store from './Store';
-import { AccessLevel, DeserialiserFunction, Payload, Quotas, SerialiserFunction } from './Types';
+import { DeserialiserFunction, Payload, Quotas, SerialiserFunction, SetAccessLevelOptions } from './Types';
 import incrementWriteQuota from './utils/incrementWriteQuota';
 import notifyEventTargets from './utils/notifyEventTargets';
 import deepMergeObjects from './utils/deepMergeObjects';
@@ -263,7 +263,7 @@ export default class StorageArea {
 	 * __Note:__ This method has no effect.
 	 */
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	setAccessLevel(accessLevel: AccessLevel) {
+	setAccessLevel(accessOptions: SetAccessLevelOptions = {}) {
 		return Promise.resolve();
 	}
 }

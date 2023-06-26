@@ -547,7 +547,11 @@ describe('setAccessLevel()', () => {
 	test('Can set access level', () => {
 		const k = new StorageArea();
 
-		k.setAccessLevel(AccessLevel.TRUSTED_AND_UNTRUSTED_CONTEXTS);
-		k.setAccessLevel(AccessLevel.TRUSTED_CONTEXTS);
+		k.setAccessLevel({
+			accessLevel: AccessLevel.TRUSTED_AND_UNTRUSTED_CONTEXTS,
+		});
+		k.setAccessLevel({
+			accessLevel: AccessLevel.TRUSTED_CONTEXTS,
+		});
 	});
 });
