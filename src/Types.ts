@@ -6,10 +6,23 @@
 import { UNLIMITED_QUOTA } from './Constants';
 import Store from './Store';
 
+/**
+ * Initial payload for the mock _Storage Area_. The payload should be a value that
+ * is accepted by the `Map` constructor.
+ */
 export type Payload = Iterable<any>
 
+/**
+ * A function which serialises a value for storage within a Storage Area.
+ * - If a string is returned, the property has been successfully serialised.
+ * - If `null` is returned, the property should be omitted. Please note that serialise() may also
+ *   return the string `"null"`, which as per above, means the value of `null` was successfully serialised.
+ */
 export type SerialiserFunction = (value: unknown, parentIsArray?: boolean, parentIsObject?: boolean) => string | null
 
+/**
+ * Deserialises a value previously serialised by {@link SerialiserFunction}.
+ */
 export type DeserialiserFunction = (value: string) => any
 
 export type OnChangedChanges = {

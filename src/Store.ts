@@ -1,20 +1,20 @@
 /*
- * Copyright (c) 2023 Lachlan McDonald. All rights reserved.
- * This file is licensed under the MIT License
- * https://github.com/lachlanmcdonald/mock-storagearea
- */
+* Copyright (c) 2023 Lachlan McDonald. All rights reserved.
+* This file is licensed under the MIT License
+* https://github.com/lachlanmcdonald/mock-storagearea
+*/
 import { DeserialiserFunction, PropertyChanges, SerialiserFunction } from './Types';
 import StoreChangeFactory from './utils/StoreChangeFactory';
 import { deserialise, serialise } from './utils/serialiser';
 
 /**
- * A __Store__ represents the underlying data structure of a __StorageArea__.
+ * A __Store__ represents the underlying data structure of a {@link StorageArea}.
  *
  * Any operation which modifies the __Store__ (`.set()` or `.delete()`) will
  * not modify the instance itself, but return a new instance with the modifications
  * and changes, allowing the result to be inspected.
  *
- * Values in the __Store__ are serialised using using {@link utils.serialise}, and as such,
+ * Values in the __Store__ are serialised using using {@link serialise}, and as such,
  * some values may throw an exception or be ignored.
  */
 export default class Store {
@@ -25,7 +25,7 @@ export default class Store {
 	/**
 	 * Initialises a new instance of Store with the optional payload
 	 * used as the initial store. The payload can be any value accepted by the __Map__ constructor,
-	 * however, the values must be serialised strings (using {@link utils.serialise}).
+	 * however, the values must be serialised strings (using {@link serialise}).
 	 */
 	constructor(payload?: Iterable<any>, serialiser?: SerialiserFunction, deserialiser?: DeserialiserFunction) {
 		this.store = new Map(payload || []);
