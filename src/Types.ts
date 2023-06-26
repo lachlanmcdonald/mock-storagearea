@@ -32,6 +32,26 @@ export type OnChangedChanges = {
 	}
 }
 
+export interface StorageAreaQuota {
+	MAX_ITEMS: number
+	MAX_SUSTAINED_WRITE_OPERATIONS_PER_MINUTE: number
+	MAX_WRITE_OPERATIONS_PER_HOUR: number
+	MAX_WRITE_OPERATIONS_PER_MINUTE: number
+	QUOTA_BYTES: number
+	QUOTA_BYTES_PER_ITEM: number
+	writeOperationsPerHour: Record<string, number>
+	writeOperationsPerMinute: Record<string, number>
+}
+
+export interface StorageChange {
+	/** The old value of the item, if any. */
+	oldValue?: any;
+	/** The new value of the item, if any. */
+	newValue?: any;
+}
+
+export type StorageChanges = Record<string, StorageChange>
+
 export type OnChangedListener = (changes: OnChangedChanges, areaName: string) => void;
 
 export type Quota = keyof typeof UNLIMITED_QUOTA
@@ -44,7 +64,7 @@ export enum AccessLevel {
 }
 
 export type SetAccessLevelOptions = Partial<{
-	accessLevel: AccessLevel,
+	accessLevel?: AccessLevel,
 }>;
 
 export type PropertyChanges = Record<string, {

@@ -17,11 +17,16 @@ export const UNLIMITED_QUOTA = {
 };
 
 /**
- * Default quota for local and session storage.
+ * Default quota for local storage.
  */
 export const CHROME_LOCAL_STORAGE_DEFAULT_QUOTA = {
 	QUOTA_BYTES: 10485760,
 };
+
+/**
+ * Default quota for session storage.
+ */
+export const CHROME_SESSION_STORAGE_DEFAULT_QUOTA = CHROME_LOCAL_STORAGE_DEFAULT_QUOTA;
 
 /**
  * Default quota for sync storage.

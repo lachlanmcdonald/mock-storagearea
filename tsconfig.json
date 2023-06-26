@@ -1,21 +1,21 @@
 {
-  "compilerOptions": {
-    "target": "ES2022",
-    "outDir": "dist",
-    "module": "Node16",
-    "moduleResolution": "node",
-    "noImplicitReturns": true,
-    "noUnusedLocals": true,
-    "noImplicitAny": true,
-    "sourceMap": true,
-    "strict": true,
-    "declaration": true
-  },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+	"compilerOptions": {
+		"target": "ES2022",
+		"outDir": "dist",
+		"module": "Node16",
+		"moduleResolution": "node",
+		"noImplicitReturns": true,
+		"noUnusedLocals": true,
+		"noImplicitAny": true,
+		"sourceMap": true,
+		"strict": true,
+		"declaration": true
+	},
+	"include": [
+		"src/**/*"
+	],
+	"exclude": [
+		"node_modules",
+		"dist"
+	]
 }

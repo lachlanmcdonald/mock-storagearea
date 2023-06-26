@@ -4,31 +4,33 @@
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
 import {
-	CHROME_LOCAL_STORAGE_DEFAULT_QUOTA,
-	CHROME_SYNC_STORAGE_DEFAULT_QUOTA,
 	UNLIMITED_QUOTA,
+	CHROME_LOCAL_STORAGE_DEFAULT_QUOTA,
+	CHROME_SESSION_STORAGE_DEFAULT_QUOTA,
+	CHROME_SYNC_STORAGE_DEFAULT_QUOTA,
 	LocalStorageArea,
 	ManagedStorageArea,
 	SessionStorageArea,
 	SyncStorageArea,
-	StorageArea,
-	Store,
 	deserialise,
-	onChangedFactory,
 	serialise,
 } from './index';
 
 describe('Exports', () => {
+	test('UNLIMITED_QUOTA', () => {
+		expect(UNLIMITED_QUOTA).toBeTruthy();
+	});
+
 	test('CHROME_LOCAL_STORAGE_DEFAULT_QUOTA', () => {
 		expect(CHROME_LOCAL_STORAGE_DEFAULT_QUOTA).toBeTruthy();
 	});
 
-	test('CHROME_SYNC_STORAGE_DEFAULT_QUOTA', () => {
-		expect(CHROME_SYNC_STORAGE_DEFAULT_QUOTA).toBeTruthy();
+	test('CHROME_SESSION_STORAGE_DEFAULT_QUOTA', () => {
+		expect(CHROME_SESSION_STORAGE_DEFAULT_QUOTA).toBeTruthy();
 	});
 
-	test('UNLIMITED_QUOTA', () => {
-		expect(UNLIMITED_QUOTA).toBeTruthy();
+	test('CHROME_SYNC_STORAGE_DEFAULT_QUOTA', () => {
+		expect(CHROME_SYNC_STORAGE_DEFAULT_QUOTA).toBeTruthy();
 	});
 
 	test('LocalStorageArea', () => {
@@ -47,24 +49,11 @@ describe('Exports', () => {
 		expect(SyncStorageArea).toBeTruthy();
 	});
 
-	test('StorageArea', () => {
-		expect(StorageArea).toBeTruthy();
-	});
-
-	test('Store', () => {
-		expect(Store).toBeTruthy();
-	});
-
 	test('deserialise', () => {
 		expect(deserialise).toBeTruthy();
-	});
-
-	test('onChangedFactory', () => {
-		expect(onChangedFactory).toBeTruthy();
 	});
 
 	test('serialise', () => {
 		expect(serialise).toBeTruthy();
 	});
 });
-

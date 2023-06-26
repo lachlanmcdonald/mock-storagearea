@@ -3,14 +3,18 @@
  * This file is licensed under the MIT License
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
-import OnChangedEventTarget from './OnChangedEventTarget';
+import OnChangedEvent from './OnChangedEvent';
 import { OnChangedChanges, OnChangedListener } from './Types';
 
-describe('OnChangedEventTarget()', () => {
-	let eventTarget: OnChangedEventTarget;
+describe('OnChangedEvent()', () => {
+	let onChanged: ReturnType<typeof OnChangedEvent>['external'];
+	let dispatch: ReturnType<typeof OnChangedEvent>['dispatch'];
 
 	beforeEach(() => {
-		eventTarget = new OnChangedEventTarget();
+		const k = OnChangedEvent();
+
+		onChanged = k.external;
+		dispatch = k.dispatch;
 	});
 
 	test('Listen for events with addListener()', done => {
@@ -20,18 +24,16 @@ describe('OnChangedEventTarget()', () => {
 				newValue: 2,
 			},
 		} as OnChangedChanges;
-		const inputAreaName = 'area';
 
-		const handler: OnChangedListener = (changes, areaName) => {
+		const handler: OnChangedListener = changes => {
 			expect(changes).toMatchObject(inputChanges);
-			expect(areaName).toBe(inputAreaName);
 			done();
 		};
 
 		expect(() => {
-			eventTarget.addListener(handler);
+			onChanged.addListener(handler);
 
-			eventTarget.dispatch(inputChanges, inputAreaName);
+			dispatch(inputChanges);
 		}).not.toThrow();
 	});
 
@@ -39,23 +41,23 @@ describe('OnChangedEventTarget()', () => {
 		const handler: OnChangedListener = jest.fn();
 
 		expect(() => {
-			eventTarget.addListener(handler);
+			onChanged.addListener(handler);
 
-			eventTarget.dispatch({
+			dispatch({
 				test: {
 					oldValue: 1,
 					newValue: 2,
 				},
-			}, 'area');
+			});
 
-			eventTarget.removeListener(handler);
+			onChanged.removeListener(handler);
 
-			eventTarget.dispatch({
+			dispatch({
 				test: {
 					oldValue: 2,
 					newValue: 3,
 				},
-			}, 'area');
+			});
 
 			expect(handler).not.toHaveBeenCalledTimes(2);
 		}).not.toThrow();

@@ -4,7 +4,9 @@
 
 __mock-storagearea__ is a implementation of Chrome's [extension storage interface](https://developer.chrome.com/docs/extensions/reference/storage/), i.e. `chrome.storage`. This package is primarily intended for use in development/testing of extensions outside of the extension context, i.e. to development of UI external to the extension or test automation.
 
-> __Beta release:__ The package version will remain in <u>beta</u> until it can be more thoroughly tested in production. Whilst the existing tests are comprehensive, some behaviour may not properly replicate that of Chrome. Please [raise an issue](https://github.com/lachlanmcdonald/mock-storagearea/issues) if you encounter an irregularity.
+> __Alpha release:__ The package has not yet been published and is still a work in progress.
+
+> __Beta release:__  (FUTURE USE) The package version will remain in <u>beta</u> until it can be more thoroughly tested in production. Whilst the existing tests are comprehensive, some behaviour may not properly replicate that of Chrome. Please [raise an issue](https://github.com/lachlanmcdonald/mock-storagearea/issues) if you encounter an irregularity.
 
 __Notes:__ 
 
@@ -18,17 +20,17 @@ __Notes:__
 There are four storage areas corresponding to those in Chrome:
 
 ```ts
-import { LocalStorageArea } from '@lachlanmcdonald/mock-storagearea';
-import { ManagedStorageArea } from '@lachlanmcdonald/mock-storagearea';
 import { SessionStorageArea } from '@lachlanmcdonald/mock-storagearea';
+import { LocalStorageArea } from '@lachlanmcdonald/mock-storagearea';
 import { SyncStorageArea } from '@lachlanmcdonald/mock-storagearea';
+import { ManagedStorageArea } from '@lachlanmcdonald/mock-storagearea';
 
 const chrome = {
   storage: {
-    local: new LocalStorageArea(),
-    managed: new ManagedStorageArea(),
-    session: new SessionStorageArea(),
-    sync: new SyncStorageArea(),
+	session: SessionStorageArea(),
+    local: LocalStorageArea(),
+    sync: SyncStorageArea(),
+    managed: ManagedStorageArea(),
   }
 };
 ```
