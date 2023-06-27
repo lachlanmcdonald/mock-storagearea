@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2023 Lachlan McDonald. All rights reserved.
+ * This file is licensed under the MIT License
+ * https://github.com/lachlanmcdonald/mock-storagearea
+ */
 import incrementWriteQuota from './incrementWriteQuota';
 
 const TIMESTAMP = new Date(Date.UTC(2023, 0, 1, 12, 0, 0)).valueOf();

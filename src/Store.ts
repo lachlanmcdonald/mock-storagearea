@@ -1,8 +1,8 @@
 /*
-* Copyright (c) 2023 Lachlan McDonald. All rights reserved.
-* This file is licensed under the MIT License
-* https://github.com/lachlanmcdonald/mock-storagearea
-*/
+ * Copyright (c) 2023 Lachlan McDonald. All rights reserved.
+ * This file is licensed under the MIT License
+ * https://github.com/lachlanmcdonald/mock-storagearea
+ */
 import { DeserialiserFunction, PropertyChanges, SerialiserFunction } from './Types';
 import StoreChangeFactory from './utils/StoreChangeFactory';
 import { deserialise, serialise } from './utils/serialiser';
