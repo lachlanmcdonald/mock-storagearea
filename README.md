@@ -21,11 +21,11 @@ There are four storage areas corresponding to those in Chrome:
 
 ```typescript
 import {
-	SessionStorageArea, 
-	LocalStorageArea, 
-	SyncStorageArea, 
-	ManagedStorageArea, 
-	onChanged
+  SessionStorageArea, 
+  LocalStorageArea, 
+  SyncStorageArea, 
+  ManagedStorageArea, 
+  onChanged
 } from '@lachlanmcdonald/mock-storagearea';
 
 const session = SessionStorageArea();
@@ -35,11 +35,11 @@ const managed = ManagedStorageArea();
 
 const chrome = {
   storage: {
-	session,
+    session,
     local,
     sync,
     managed,
-	onChanged: onChanged({ session, local, sync, managed }),
+    onChanged: onChanged({ session, local, sync, managed }),
   }
 };
 ```
