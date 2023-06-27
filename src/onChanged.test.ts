@@ -14,25 +14,26 @@ interface Chrome {
 	onChanged: ReturnType<typeof onChanged>
 }
 
-describe.skip('onChanged()', () => {
+describe('onChanged()', () => {
 	let chrome = {} as Chrome;
 
 	beforeEach(() => {
-		const store = new Store([
-			['testKey', serialise(1234)],
-			['otherKey', serialise(512)],
+		const sessionAreaStore = new Store([
+			['apple', serialise('Error')],
+			['orange', serialise('Error')],
+		]);
+		const localAreaStore = new Store([
+			['apple', serialise(1234)],
+			['orange', serialise(512)],
 		]);
 
-		const sessionArea = SessionStorageArea();
-		const localArea = LocalStorageArea(store);
+		const session = SessionStorageArea(sessionAreaStore);
+		const local = LocalStorageArea(localAreaStore);
 
 		chrome = {
-			local: localArea,
-			session: sessionArea,
-			onChanged: onChanged({
-				local: localArea,
-				session: sessionArea,
-			}),
+			session,
+			local,
+			onChanged: onChanged({ session, local }),
 		};
 	});
 
@@ -48,9 +49,9 @@ describe.skip('onChanged()', () => {
 	test('Listen to set() when a value is changed', done => {
 		chrome.onChanged.addListener((changes, areaName) => {
 			expect(areaName).toBe('local');
-			expect(changes).toHaveProperty('testKey');
+			expect(changes).toHaveProperty('apple');
 			expect(changes).toMatchObject({
-				testKey: {
+				apple: {
 					oldValue: 1234,
 					newValue: 4567,
 				},
@@ -60,12 +61,13 @@ describe.skip('onChanged()', () => {
 		});
 
 		expect(chrome.local.set({
-			testKey: 4567,
+			apple: 4567,
 		})).resolves.not.toThrowError();
 	});
 
-	test('Listener is called when a value is added', done => {
-		chrome.onChanged.addListener(changes => {
+	test('Callback is called when a value is added', done => {
+		chrome.onChanged.addListener((changes, areaName) => {
+			expect(areaName).toBe('local');
 			expect(changes).toMatchObject({
 				newKey: {
 					oldValue: undefined, // eslint-disable-line no-undefined
@@ -81,10 +83,11 @@ describe.skip('onChanged()', () => {
 		})).resolves.not.toThrowError();
 	});
 
-	test('Listener is called when a value is removed', done => {
-		chrome.onChanged.addListener(changes => {
+	test('Callback is called when a value is removed', done => {
+		chrome.onChanged.addListener((changes, areaName) => {
+			expect(areaName).toBe('local');
 			expect(changes).toMatchObject({
-				testKey: {
+				apple: {
 					oldValue: 1234,
 					newValue: undefined, // eslint-disable-line no-undefined
 				},
@@ -93,17 +96,18 @@ describe.skip('onChanged()', () => {
 			done();
 		});
 
-		expect(chrome.local.remove(['testKey'])).resolves.not.toThrowError();
+		expect(chrome.local.remove(['apple'])).resolves.not.toThrowError();
 	});
 
-	test('Listener is called on clear()', done => {
-		chrome.onChanged.addListener(changes => {
+	test('Callback is called on clear()', done => {
+		chrome.onChanged.addListener((changes, areaName) => {
+			expect(areaName).toBe('local');
 			expect(changes).toMatchObject({
-				testKey: {
+				apple: {
 					oldValue: 1234,
 					newValue: undefined, // eslint-disable-line no-undefined
 				},
-				otherKey: {
+				orange: {
 					oldValue: 512,
 					newValue: undefined, // eslint-disable-line no-undefined
 				},

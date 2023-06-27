@@ -9,6 +9,11 @@ import { StorageAreaFactory } from './StorageAreaFactory';
 
 type StorageAreaLike = ReturnType<typeof StorageAreaFactory>;
 
+/**
+ * The __onChanged__ factory binds callbacks to the `onChanged` event on each
+ * of the provide _Storage Areas_ and passes through the `areaName` argument
+ * to the callback.
+ */
 export default function onChanged(areas: Record<string, StorageAreaLike>) {
 	const { dispatch, external } = OnChangedEvent();
 
@@ -18,7 +23,7 @@ export default function onChanged(areas: Record<string, StorageAreaLike>) {
 
 			if (Object.hasOwn(area, 'onChanged')) {
 				if (Object.hasOwn(area.onChanged, 'addListener')) {
-					area.onChanged.addListener((changes, areaName) => {
+					area.onChanged.addListener(changes => {
 						dispatch(changes, areaName);
 					});
 				} else {
