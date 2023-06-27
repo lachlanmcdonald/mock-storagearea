@@ -21,7 +21,7 @@ export default class Store {
 	private serialise: SerialiserFunction;
 	private deserialise: DeserialiserFunction;
 
-	store: Map<string, string>;
+	data: Map<string, string>;
 
 	/**
 	 * Initialises a new instance of Store with the optional payload
@@ -29,7 +29,7 @@ export default class Store {
 	 * however, the values must be serialised strings (using {@link serialise}).
 	 */
 	constructor(payload?: Iterable<any>, serialiser?: SerialiserFunction, deserialiser?: DeserialiserFunction) {
-		this.store = new Map(payload || []);
+		this.data = new Map(payload || []);
 		this.serialise = serialiser || serialise;
 		this.deserialise = deserialiser || deserialise;
 	}
@@ -42,14 +42,14 @@ export default class Store {
 	 * passed-by-reference.
 	 */
 	clone() {
-		return new Store(this.store.entries(), this.serialise, this.deserialise);
+		return new Store(this.data.entries(), this.serialise, this.deserialise);
 	}
 
 	/**
 	 * Returns whether the store contains the provided key.
 	 */
 	has(key: string) {
-		return this.store.has(key);
+		return this.data.has(key);
 	}
 
 	/**
@@ -58,7 +58,7 @@ export default class Store {
 	 */
 	get(key: string) {
 		if (this.has(key)) {
-			return this.deserialise(this.store.get(key) as string);
+			return this.deserialise(this.data.get(key) as string);
 		} else {
 			throw new RangeError(`key does not exist in store: ${key}`);
 		}
@@ -76,7 +76,7 @@ export default class Store {
 				const serialisedValue = this.serialise(payload[key]);
 
 				if (typeof serialisedValue === 'string') {
-					mutatedStore.store.set(key, serialisedValue);
+					mutatedStore.data.set(key, serialisedValue);
 				}
 			}
 		}
@@ -96,7 +96,7 @@ export default class Store {
 		const mutatedStore = this.clone();
 
 		keys.forEach(key => {
-			mutatedStore.store.delete(key);
+			mutatedStore.data.delete(key);
 		});
 
 		return StoreChangeFactory(this, mutatedStore);
@@ -108,7 +108,7 @@ export default class Store {
 	clear() {
 		const mutatedStore = this.clone();
 
-		mutatedStore.store = new Map();
+		mutatedStore.data = new Map();
 
 		return StoreChangeFactory(this, mutatedStore);
 	}
@@ -167,7 +167,7 @@ export default class Store {
 		const result = {} as Record<string, number>;
 
 		for (const key of this.keys()) {
-			const value = this.store.get(key);
+			const value = this.data.get(key);
 
 			if (typeof value === 'string') {
 				result[key] = key.length + value.length;
@@ -188,10 +188,10 @@ export default class Store {
 	 * Returns the number of items within the store.
 	 */
 	get count() {
-		return this.store.size;
+		return this.data.size;
 	}
 
-	keys() { return this.store.keys(); }
-	values() { return this.store.values(); }
-	entries() { return this.store.entries(); }
+	keys() { return this.data.keys(); }
+	values() { return this.data.values(); }
+	entries() { return this.data.entries(); }
 }

@@ -74,7 +74,7 @@ export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quo
 			incrementWriteQuota(MAX_WRITE_OPERATIONS_PER_HOUR, MAX_WRITE_OPERATIONS_PER_MINUTE, writeOperationsPerHour, writeOperationsPerMinute);
 			const changes = store.clear();
 
-			store.store = changes.after.store;
+			store.data = changes.after.data;
 			dispatchEvent(dispatch, changes);
 			return Promise.resolve();
 		} catch (e) {
@@ -200,7 +200,7 @@ export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quo
 			incrementWriteQuota(MAX_WRITE_OPERATIONS_PER_HOUR, MAX_WRITE_OPERATIONS_PER_MINUTE, writeOperationsPerHour, writeOperationsPerMinute);
 			const changes = store.delete(keys);
 
-			store.store = changes.after.store;
+			store.data = changes.after.data;
 			dispatchEvent(dispatch, changes);
 			return Promise.resolve();
 		} catch (e) {
@@ -240,7 +240,7 @@ export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quo
 					}
 				});
 
-				store.store = changes.after.store;
+				store.data = changes.after.data;
 				dispatchEvent(dispatch, changes);
 				return Promise.resolve();
 			}
