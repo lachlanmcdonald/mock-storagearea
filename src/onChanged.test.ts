@@ -42,7 +42,7 @@ describe.skip('onChanged()', () => {
 			chrome.onChanged.addListener((changes, areaName) => {
 				return;
 			});
-		});
+		}).not.toThrow();
 	});
 
 	test('Listen to set() when a value is changed', done => {
@@ -96,7 +96,7 @@ describe.skip('onChanged()', () => {
 		expect(chrome.local.remove(['testKey'])).resolves.not.toThrowError();
 	});
 
-	test('Listener is when clear() is called', done => {
+	test('Listener is called on clear()', done => {
 		chrome.onChanged.addListener(changes => {
 			expect(changes).toMatchObject({
 				testKey: {

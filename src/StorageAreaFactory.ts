@@ -345,10 +345,3 @@ export function ManagedStorageArea(initialStore?: Store) {
 		set,
 	}) as ManagedStorageAreaInterface;
 }
-
-// type Except<K, V> = Exclude<K, Extract<K, V>>
-// type Mutable<T> = {
-//     -readonly[P in keyof T]: T[P]
-// };
-// type StorageAreaFactoryWithQuota<K> = Readonly<Exclude<ReturnType<typeof StorageAreaFactory>, Except<Quota, keyof K>>>
-// type B = Except<Quota, keyof typeof CHROME_LOCAL_STORAGE_DEFAULT_QUOTA>

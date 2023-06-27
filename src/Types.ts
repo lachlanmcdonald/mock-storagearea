@@ -33,6 +33,7 @@ export interface StorageAreaQuota {
 export interface StorageChange {
 	/** The old value of the item, if any. */
 	oldValue?: any;
+
 	/** The new value of the item, if any. */
 	newValue?: any;
 }
@@ -42,7 +43,7 @@ export type StorageChanges = Record<string, StorageChange>
 /**
  * @TODO There will be two OnChangedListener's as one will include an `areaName`.
  */
-export type OnChangedListener = (changes: StorageChanges) => void;
+export type OnChangedListener = (changes: StorageChanges, areaName?: string) => void;
 
 export type Quota = keyof typeof UNLIMITED_QUOTA
 
