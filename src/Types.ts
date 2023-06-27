@@ -26,8 +26,6 @@ export interface StorageAreaQuota {
 	MAX_WRITE_OPERATIONS_PER_MINUTE: number
 	QUOTA_BYTES: number
 	QUOTA_BYTES_PER_ITEM: number
-	writeOperationsPerHour: Record<string, number>
-	writeOperationsPerMinute: Record<string, number>
 }
 
 export interface StorageChange {

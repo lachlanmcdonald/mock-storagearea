@@ -15,8 +15,6 @@ const mergeQuotas = (quotas?: Quotas): StorageAreaQuota => {
 	return {
 		...UNLIMITED_QUOTA,
 		...quotas || {},
-		writeOperationsPerHour: {},
-		writeOperationsPerMinute: {},
 	};
 };
 
@@ -60,6 +58,18 @@ export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quo
 	} = OnChangedEvent();
 
 	/**
+	 * A key-value pair, key represents a range of time (i.e. the current hour) and
+	 * value is the number of operations performed for that range.
+	 */
+	const writeOperationsPerHour = {} as Record<string, number>;
+
+	/**
+	 * A key-value pair, key represents a range of time (i.e. the current hour) and
+	 * value is the number of operations performed for that range.
+	 */
+	const writeOperationsPerMinute = {} as Record<string, number>;
+
+	/**
 	 * Removes all items from the _Storage Area_.
 	 */
 	function clear() {
@@ -67,8 +77,6 @@ export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quo
 			const {
 				MAX_WRITE_OPERATIONS_PER_HOUR,
 				MAX_WRITE_OPERATIONS_PER_MINUTE,
-				writeOperationsPerHour,
-				writeOperationsPerMinute,
 			} = quotas;
 
 			incrementWriteQuota(MAX_WRITE_OPERATIONS_PER_HOUR, MAX_WRITE_OPERATIONS_PER_MINUTE, writeOperationsPerHour, writeOperationsPerMinute);
@@ -193,8 +201,6 @@ export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quo
 			const {
 				MAX_WRITE_OPERATIONS_PER_HOUR,
 				MAX_WRITE_OPERATIONS_PER_MINUTE,
-				writeOperationsPerHour,
-				writeOperationsPerMinute,
 			} = quotas;
 
 			incrementWriteQuota(MAX_WRITE_OPERATIONS_PER_HOUR, MAX_WRITE_OPERATIONS_PER_MINUTE, writeOperationsPerHour, writeOperationsPerMinute);
@@ -219,8 +225,6 @@ export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quo
 				MAX_ITEMS,
 				QUOTA_BYTES,
 				QUOTA_BYTES_PER_ITEM,
-				writeOperationsPerHour,
-				writeOperationsPerMinute,
 			} = quotas;
 
 			incrementWriteQuota(MAX_WRITE_OPERATIONS_PER_HOUR, MAX_WRITE_OPERATIONS_PER_MINUTE, writeOperationsPerHour, writeOperationsPerMinute);

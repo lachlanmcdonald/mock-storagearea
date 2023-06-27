@@ -14,11 +14,7 @@ describe('.clone()', () => {
 		const j = k.clone();
 
 		expect(k.compare(j)).toMatchObject({});
-
-		// @ts-expect-error Intentional access of private member for testing purposes
 		expect(k.serialise).toBe(j.serialise);
-
-		// @ts-expect-error Intentional access of private member for testing purposes
 		expect(k.deserialise).toBe(j.deserialise);
 	});
 });
