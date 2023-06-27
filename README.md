@@ -19,29 +19,38 @@ __Notes:__
 
 There are four storage areas corresponding to those in Chrome:
 
-```ts
-import { SessionStorageArea } from '@lachlanmcdonald/mock-storagearea';
-import { LocalStorageArea } from '@lachlanmcdonald/mock-storagearea';
-import { SyncStorageArea } from '@lachlanmcdonald/mock-storagearea';
-import { ManagedStorageArea } from '@lachlanmcdonald/mock-storagearea';
+```typescript
+import {
+	SessionStorageArea, 
+	LocalStorageArea, 
+	SyncStorageArea, 
+	ManagedStorageArea, 
+	onChanged
+} from '@lachlanmcdonald/mock-storagearea';
+
+const session = SessionStorageArea();
+const local = LocalStorageArea();
+const sync = SyncStorageArea();
+const managed = ManagedStorageArea();
 
 const chrome = {
   storage: {
-	session: SessionStorageArea(),
-    local: LocalStorageArea(),
-    sync: SyncStorageArea(),
-    managed: ManagedStorageArea(),
+	session,
+    local,
+    sync,
+    managed,
+	onChanged: onChanged({ session, local, sync, managed }),
   }
 };
 ```
 
 > See: [API]
 
-### Listening for changes
+## Listening for changes
 
 > See: [Listening to changes](https://github.com/lachlanmcdonald/mock-storagearea/wiki/Listening-to-changes)
 
-### Adjusting quotas
+## Adjusting quotas
 
 Normally, quotas are defined by the browser and not configurable by the extension. However, for testing purposes, the quota constraints can be overwritten during initialisation.
 
