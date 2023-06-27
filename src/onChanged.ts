@@ -16,6 +16,16 @@ type StorageAreaLike = ReturnType<typeof StorageAreaFactory>;
 export default function onChanged(areas: Record<string, StorageAreaLike>) {
 	const { dispatch, external } = OnChangedEvent();
 
+	if (typeof areas !== 'object') {
+		throw new TypeError(`onChanged() Argument 1 must be an object. Received: ${typeof areas}`);
+	}
+
+	const keys = Object.getOwnPropertyNames(areas);
+
+	if (keys.length === 0) {
+		throw new TypeError(`onChanged() Argument 1 must have keys, received no keys.`);
+	}
+
 	for (const areaName in areas) {
 		if (Object.hasOwn(areas, areaName)) {
 			const area = areas[areaName];
