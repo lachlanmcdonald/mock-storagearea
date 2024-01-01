@@ -2,11 +2,9 @@
 
 [![Build](https://github.com/lachlanmcdonald/mock-storagearea/actions/workflows/build.yml/badge.svg?branch=main)][build-link] [![npm version](https://badge.fury.io/js/%40lachlanmcdonald%2Fmock-storagearea.svg)][package-link] [![License](https://img.shields.io/badge/License-MIT-blue.svg)][license-link] 
 
+> __WIP:__ This project is mostly complete but otherwise paused -- as the available documentation of the extension storage interface leaves a lot to be desired in terms of accuracy. At present, there is no demand for this package's completion.
+
 __mock-storagearea__ is a implementation of Chrome's [extension storage interface](https://developer.chrome.com/docs/extensions/reference/storage/), i.e. `chrome.storage`. This package is primarily intended for use in development/testing of extensions outside of the extension context, i.e. to development of UI external to the extension or test automation.
-
-> __Alpha release:__ The package has not yet been published and is still a work in progress.
-
-> __Beta release:__  (FUTURE USE) The package version will remain in <u>beta</u> until it can be more thoroughly tested in production. Whilst the existing tests are comprehensive, some behaviour may not properly replicate that of Chrome. Please [raise an issue](https://github.com/lachlanmcdonald/mock-storagearea/issues) if you encounter an irregularity.
 
 __Notes:__ 
 
