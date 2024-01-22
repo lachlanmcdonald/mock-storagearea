@@ -101,7 +101,9 @@ describe('serialise() and deserialise()', () => {
 		test('Functions', () => {
 			const k = serialise({
 				a: () => null,
-				b() { return null; },
+				b() {
+					return null;
+				},
 			}) as string;
 
 			expect(deserialise(k)).toMatchObject({});

@@ -393,12 +393,14 @@ describe('StorageAreaFactory()', () => {
 			});
 
 			expect(k.set({
+				/* spell-checker: disable */
 				a: 'Sint exercitation.',
 				b: 'Excepteur mollit fugiat reprehenderit ex elit quis id consectetur pariatur nisi.',
 				c: 'Enim veniam sunt sint officia.',
 				d: 'Nulla tempor.',
 				e: 'Cillum sunt cupidatat.',
 				f: 'Tempor sunt nisi proident ex mollit commodo ad esse do.',
+				/* spell-checker: enable */
 			})).rejects.toThrow(/quota exceeded.+QUOTA_BYTES/ui);
 		});
 
@@ -408,7 +410,9 @@ describe('StorageAreaFactory()', () => {
 			});
 
 			expect(k.set({
+				/* spell-checker: disable */
 				a: 'Excepteur mollit fugiat reprehenderit ex elit quis id consectetur pariatur nisi.',
+				/* spell-checker: enable */
 			})).rejects.toThrow(/quota exceeded.+QUOTA_BYTES_PER_ITEM/ui);
 		});
 
@@ -420,7 +424,9 @@ describe('StorageAreaFactory()', () => {
 			});
 
 			expect(k.set({
+				/* spell-checker: disable */
 				a: 'Excepteur mollit fugiat reprehenderit ex elit quis id consectetur pariatur nisi.',
+				/* spell-checker: enable */
 			})).rejects.toThrow(/quota exceeded.+QUOTA_BYTES_PER_ITEM/ui);
 
 			expect(k.get('a')).resolves.toMatchObject({

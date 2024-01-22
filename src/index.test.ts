@@ -15,7 +15,7 @@ import {
 	deserialise,
 	serialise,
 	Store,
-	onChanged,
+	onChanged
 } from './index';
 
 describe('Exports', () => {

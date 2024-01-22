@@ -104,10 +104,10 @@ export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quo
 					const nonStringIndex = keys.findIndex(x => typeof x !== 'string');
 
 					if (nonStringIndex > -1) {
-						throw new TypeError(`getBytesInUse() Argument 1 must be null, string, or string[]. Received an array with a non-string element at index ${nonStringIndex}: ${typeof keys[nonStringIndex]}`);
+						throw new TypeError(`getBytesInUse() Argument 1 must be null, string, or string[]. Received an array with a non-string element at index ${ nonStringIndex }: ${ typeof keys[nonStringIndex] }`);
 					}
 				} else {
-					throw new TypeError(`getBytesInUse() Argument 1 must be null, string, or string[]. Received: ${typeof keys}`);
+					throw new TypeError(`getBytesInUse() Argument 1 must be null, string, or string[]. Received: ${ typeof keys }`);
 				}
 
 				const sizeInBytes = store.sizeInBytes;
@@ -143,7 +143,7 @@ export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quo
 			} else if (Array.isArray(keys)) {
 				keys.forEach((key, index) => {
 					if (typeof key !== 'string') {
-						throw new TypeError(`get() Argument 1 must be a string, string[] or an object of key/value pairs. Received an array with a non-string element at index ${index}: ${typeof key}`);
+						throw new TypeError(`get() Argument 1 must be a string, string[] or an object of key/value pairs. Received an array with a non-string element at index ${ index }: ${ typeof key }`);
 					}
 					lookup[key] = {};
 				});
@@ -192,10 +192,10 @@ export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quo
 				const nonStringIndex = keys.findIndex(x => typeof x !== 'string');
 
 				if (nonStringIndex > -1) {
-					throw new TypeError(`remove() Argument 1 must be a string or string[]. Received an array with a non-string element at index ${nonStringIndex}: ${typeof keys[nonStringIndex]}`);
+					throw new TypeError(`remove() Argument 1 must be a string or string[]. Received an array with a non-string element at index ${ nonStringIndex }: ${ typeof keys[nonStringIndex] }`);
 				}
 			} else {
-				throw new TypeError(`remove() Argument 1 must be a string or string[]. Received: ${typeof keys}`);
+				throw new TypeError(`remove() Argument 1 must be a string or string[]. Received: ${ typeof keys }`);
 			}
 
 			const {
@@ -232,15 +232,15 @@ export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quo
 			const changes = store.set(items);
 
 			if (changes.after.count > MAX_ITEMS) {
-				throw new Error(`Quota exceeded: MAX_ITEMS (${MAX_ITEMS}) was exceeded. Previous size: ${changes.before.count}, new size: ${changes.after.count}.`);
+				throw new Error(`Quota exceeded: MAX_ITEMS (${ MAX_ITEMS }) was exceeded. Previous size: ${ changes.before.count }, new size: ${ changes.after.count }.`);
 			} else if (changes.after.totalBytes > QUOTA_BYTES) {
-				throw new Error(`Quota exceeded: QUOTA_BYTES (${QUOTA_BYTES}) was exceeded. Previous size: ${changes.before.sizeInBytes}, new size: ${changes.after.sizeInBytes}`);
+				throw new Error(`Quota exceeded: QUOTA_BYTES (${ QUOTA_BYTES }) was exceeded. Previous size: ${ changes.before.sizeInBytes }, new size: ${ changes.after.sizeInBytes }`);
 			} else {
 				const { sizeInBytes } = changes.after;
 
 				Object.keys(sizeInBytes).forEach(key => {
 					if (sizeInBytes[key] > QUOTA_BYTES_PER_ITEM) {
-						throw new Error(`Quota exceeded: QUOTA_BYTES_PER_ITEM (${QUOTA_BYTES_PER_ITEM}) was exceeded by property "${key}" (${sizeInBytes[key]})`);
+						throw new Error(`Quota exceeded: QUOTA_BYTES_PER_ITEM (${ QUOTA_BYTES_PER_ITEM }) was exceeded by property "${ key }" (${ sizeInBytes[key] })`);
 					}
 				});
 
@@ -286,13 +286,13 @@ export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quo
 	});
 }
 
-type NoQuotaStorageArea = Readonly<Omit<ReturnType<typeof StorageAreaFactory>, Quota>>
-type FixedQuotaStorageArea<Q> = Readonly<Omit<ReturnType<typeof StorageAreaFactory>, Quota> & Q>
+type NoQuotaStorageArea = Readonly<Omit<ReturnType<typeof StorageAreaFactory>, Quota>>;
+type FixedQuotaStorageArea<Q> = Readonly<Omit<ReturnType<typeof StorageAreaFactory>, Quota> & Q>;
 
-type SyncStorageAreaInterface = FixedQuotaStorageArea<typeof CHROME_SYNC_STORAGE_DEFAULT_QUOTA>
-type LocalStorageAreaInterface = FixedQuotaStorageArea<typeof CHROME_LOCAL_STORAGE_DEFAULT_QUOTA>
-type SessionStorageAreaInterface = FixedQuotaStorageArea<typeof CHROME_SESSION_STORAGE_DEFAULT_QUOTA>
-type ManagedStorageAreaInterface = NoQuotaStorageArea
+type SyncStorageAreaInterface = FixedQuotaStorageArea<typeof CHROME_SYNC_STORAGE_DEFAULT_QUOTA>;
+type LocalStorageAreaInterface = FixedQuotaStorageArea<typeof CHROME_LOCAL_STORAGE_DEFAULT_QUOTA>;
+type SessionStorageAreaInterface = FixedQuotaStorageArea<typeof CHROME_SESSION_STORAGE_DEFAULT_QUOTA>;
+type ManagedStorageAreaInterface = NoQuotaStorageArea;
 
 export function SyncStorageArea(initialStore?: Store) {
 	return StorageAreaFactory(initialStore, CHROME_SYNC_STORAGE_DEFAULT_QUOTA) as SyncStorageAreaInterface;

@@ -37,7 +37,7 @@ export const serialise: SerialiserFunction = (value: unknown, parentIsArray = fa
 
 		// Cannot use JSON.stringify here as the elements are already stringified and it
 		// would result in double-encoding.
-		return `[${results.join()}]`;
+		return `[${ results.join() }]`;
 	} else if (typeof value === 'object') {
 		if (value === null) {
 			return JSON.stringify(null);
@@ -45,7 +45,7 @@ export const serialise: SerialiserFunction = (value: unknown, parentIsArray = fa
 			// Edge-case where an instance of RegExp may have a lastIndex property
 			return '{}';
 		} else if (value instanceof ArrayBuffer || ArrayBuffer.isView(value)) {
-			throw new TypeError(`Unsupported type passed to serialise: ${typeof value}`);
+			throw new TypeError(`Unsupported type passed to serialise: ${ typeof value }`);
 		} else {
 			const properties = Object.getOwnPropertyNames(value) as Array<keyof typeof value>;
 			const results = [] as Array<string>;
@@ -54,16 +54,16 @@ export const serialise: SerialiserFunction = (value: unknown, parentIsArray = fa
 				const k = serialise(value[property], false, true);
 
 				if (typeof k === 'string') {
-					results.push(`${JSON.stringify(property)}:${k}`);
+					results.push(`${ JSON.stringify(property) }:${ k }`);
 				}
 			}
 
 			// Cannot use JSON.stringify here as the properties are already stringified and it
 			// would result in double-encoding.
-			return `{${results.join()}}`;
+			return `{${ results.join() }}`;
 		}
 	} else {
-		throw new TypeError(`Unsupported type passed to serialise: ${typeof value}`);
+		throw new TypeError(`Unsupported type passed to serialise: ${ typeof value }`);
 	}
 };
 

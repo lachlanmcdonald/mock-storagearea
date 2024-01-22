@@ -17,7 +17,7 @@ export default function onChanged(areas: Record<string, StorageAreaLike>) {
 	const { dispatch, external } = OnChangedEvent();
 
 	if (typeof areas !== 'object') {
-		throw new TypeError(`onChanged() Argument 1 must be an object. Received: ${typeof areas}`);
+		throw new TypeError(`onChanged() Argument 1 must be an object. Received: ${ typeof areas }`);
 	}
 
 	const keys = Object.getOwnPropertyNames(areas);
@@ -36,10 +36,10 @@ export default function onChanged(areas: Record<string, StorageAreaLike>) {
 						dispatch(changes, areaName);
 					});
 				} else {
-					throw new TypeError(`onChanged() Argument 1 property with key "${areaName}" is missing addListener()`);
+					throw new TypeError(`onChanged() Argument 1 property with key "${ areaName }" is missing addListener()`);
 				}
 			} else {
-				throw new TypeError(`onChanged() Argument 1 property with key "${areaName}" is missing "onChanged"`);
+				throw new TypeError(`onChanged() Argument 1 property with key "${ areaName }" is missing "onChanged"`);
 			}
 		}
 	}

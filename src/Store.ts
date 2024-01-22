@@ -59,7 +59,7 @@ export default class Store {
 		if (this.has(key)) {
 			return this.deserialise(this.data.get(key) as string);
 		} else {
-			throw new RangeError(`key does not exist in store: ${key}`);
+			throw new RangeError(`key does not exist in store: ${ key }`);
 		}
 	}
 
@@ -190,7 +190,15 @@ export default class Store {
 		return this.data.size;
 	}
 
-	keys() { return this.data.keys(); }
-	values() { return this.data.values(); }
-	entries() { return this.data.entries(); }
+	keys() {
+ return this.data.keys();
+}
+
+	values() {
+ return this.data.values();
+}
+
+	entries() {
+ return this.data.entries();
+}
 }

@@ -33,7 +33,7 @@ describe('.get()', () => {
 
 		expect(() => {
 			k.get('test');
-		}).toThrowError(RangeError);
+		}).toThrow(RangeError);
 	});
 });
 
@@ -102,7 +102,9 @@ describe('set()', () => {
 
 		const results = k.set({
 			red: undefined, // eslint-disable-line no-undefined
-			blue: () => { return; },
+			blue: () => {
+				return;
+			},
 		});
 
 		expect(results).toMatchObject({
