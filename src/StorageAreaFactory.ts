@@ -4,19 +4,12 @@
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
 /* eslint-disable func-style */
-import { CHROME_LOCAL_STORAGE_DEFAULT_QUOTA, CHROME_SESSION_STORAGE_DEFAULT_QUOTA, CHROME_SYNC_STORAGE_DEFAULT_QUOTA, UNLIMITED_QUOTA } from './Constants';
+import { CHROME_LOCAL_STORAGE_DEFAULT_QUOTA, CHROME_MANAGED_STORAGE_DEFAULT_QUOTA, CHROME_SESSION_STORAGE_DEFAULT_QUOTA, CHROME_SYNC_STORAGE_DEFAULT_QUOTA, UNLIMITED_QUOTA } from './Constants';
 import OnChangedEvent from './OnChangedEvent';
 import Store from './Store';
-import { Changes, Quota, Quotas, SetAccessLevelOptions, StorageAreaQuota, StorageChanges } from './Types';
+import { Changes, SetAccessLevelOptions, Quota, StorageChanges } from './Types';
 import deepMergeObjects from './utils/deepMergeObjects';
 import incrementWriteQuota from './utils/incrementWriteQuota';
-
-const mergeQuotas = (quotas?: Quotas): StorageAreaQuota => {
-	return {
-		...UNLIMITED_QUOTA,
-		...quotas || {},
-	};
-};
 
 const dispatchEvent = (dispatcher: (changes: StorageChanges) => void, changes: Changes) => {
 	const temp = {} as Record<string, {
@@ -38,11 +31,14 @@ const dispatchEvent = (dispatcher: (changes: StorageChanges) => void, changes: C
 	dispatcher(temp);
 };
 
-export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quotas) {
+export function StorageAreaFactory(initialStore?: Store | null, quotas?: Partial<Quota>) {
 	/**
 	 * Internal quota limits and usage.
 	 */
-	const quotas = mergeQuotas(testQuotas);
+	const mergedQuotas: Quota = {
+		...UNLIMITED_QUOTA,
+		...quotas || {},
+	};
 
 	/**
 	 * Internal store.
@@ -77,7 +73,7 @@ export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quo
 			const {
 				MAX_WRITE_OPERATIONS_PER_HOUR,
 				MAX_WRITE_OPERATIONS_PER_MINUTE,
-			} = quotas;
+			} = mergedQuotas;
 
 			incrementWriteQuota(MAX_WRITE_OPERATIONS_PER_HOUR, MAX_WRITE_OPERATIONS_PER_MINUTE, writeOperationsPerHour, writeOperationsPerMinute);
 			const changes = store.clear();
@@ -201,7 +197,7 @@ export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quo
 			const {
 				MAX_WRITE_OPERATIONS_PER_HOUR,
 				MAX_WRITE_OPERATIONS_PER_MINUTE,
-			} = quotas;
+			} = mergedQuotas;
 
 			incrementWriteQuota(MAX_WRITE_OPERATIONS_PER_HOUR, MAX_WRITE_OPERATIONS_PER_MINUTE, writeOperationsPerHour, writeOperationsPerMinute);
 			const changes = store.delete(keys);
@@ -225,7 +221,7 @@ export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quo
 				MAX_ITEMS,
 				QUOTA_BYTES,
 				QUOTA_BYTES_PER_ITEM,
-			} = quotas;
+			} = mergedQuotas;
 
 			incrementWriteQuota(MAX_WRITE_OPERATIONS_PER_HOUR, MAX_WRITE_OPERATIONS_PER_MINUTE, writeOperationsPerHour, writeOperationsPerMinute);
 
@@ -261,15 +257,15 @@ export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quo
 		return Promise.resolve();
 	}
 
-	const quotasConstants = {} as Quotas;
+	const quotasConstants = {} as Partial<Quota>;
 
 	// Where a quota exists, ensure that it is included in the return value.
 	['MAX_ITEMS', 'MAX_SUSTAINED_WRITE_OPERATIONS_PER_MINUTE', 'MAX_WRITE_OPERATIONS_PER_HOUR', 'MAX_WRITE_OPERATIONS_PER_MINUTE', 'QUOTA_BYTES', 'QUOTA_BYTES_PER_ITEM'].forEach(key => {
-		if (Object.hasOwn(quotas, key)) {
-			const k = quotas[key as keyof Quotas];
+		if (Object.hasOwn(mergedQuotas, key)) {
+			const k = mergedQuotas[key as keyof Quota];
 
 			if (Number.isFinite(k)) {
-				quotasConstants[key as keyof Quotas] = k;
+				quotasConstants[key as keyof Quota] = k;
 			}
 		}
 	});
@@ -284,68 +280,4 @@ export function StorageAreaFactory(initialStore?: Store | null, testQuotas?: Quo
 		onChanged,
 		...quotasConstants,
 	});
-}
-
-type NoQuotaStorageArea = Readonly<Omit<ReturnType<typeof StorageAreaFactory>, Quota>>;
-type FixedQuotaStorageArea<Q> = Readonly<Omit<ReturnType<typeof StorageAreaFactory>, Quota> & Q>;
-
-type SyncStorageAreaInterface = FixedQuotaStorageArea<typeof CHROME_SYNC_STORAGE_DEFAULT_QUOTA>;
-type LocalStorageAreaInterface = FixedQuotaStorageArea<typeof CHROME_LOCAL_STORAGE_DEFAULT_QUOTA>;
-type SessionStorageAreaInterface = FixedQuotaStorageArea<typeof CHROME_SESSION_STORAGE_DEFAULT_QUOTA>;
-type ManagedStorageAreaInterface = NoQuotaStorageArea;
-
-export function SyncStorageArea(initialStore?: Store) {
-	return StorageAreaFactory(initialStore, CHROME_SYNC_STORAGE_DEFAULT_QUOTA) as SyncStorageAreaInterface;
-}
-
-export function LocalStorageArea(initialStore?: Store) {
-	return StorageAreaFactory(initialStore, CHROME_LOCAL_STORAGE_DEFAULT_QUOTA) as LocalStorageAreaInterface;
-}
-
-export function SessionStorageArea(initialStore?: Store) {
-	return StorageAreaFactory(initialStore, CHROME_SESSION_STORAGE_DEFAULT_QUOTA) as SessionStorageAreaInterface;
-}
-
-export function ManagedStorageArea(initialStore?: Store) {
-	/**
-	 * Removes all items from the _Storage Area_.
-	 */
-	function clear(): Promise<void> {
-		try {
-			throw new Error(`clear() Cannot mutate a managed storage area.`);
-		} catch (e) {
-			return Promise.reject(e);
-		}
-	}
-
-	/**
-	 * Removes one or more items from storage.
-	*/
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	function remove(keys: string | string[]): Promise<void> {
-		try {
-			throw new Error(`remove() Cannot mutate a managed storage area.`);
-		} catch (e) {
-			return Promise.reject(e);
-		}
-	}
-
-	/**
-	 * Sets multiple items.
-	*/
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	function set(items: Record<string, any>): Promise<void> {
-		try {
-			throw new Error(`set() Cannot mutate a managed storage area.`);
-		} catch (e) {
-			return Promise.reject(e);
-		}
-	}
-
-	return Object.freeze({
-		...StorageAreaFactory(initialStore),
-		clear,
-		remove,
-		set,
-	}) as ManagedStorageAreaInterface;
 }

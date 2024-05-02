@@ -3,9 +3,9 @@
  * This file is licensed under the MIT License
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
-import { DeserialiserFunction, PropertyChanges, SerialiserFunction } from './Types';
+import { PropertyChanges } from './Types';
 import StoreChangeFactory from './utils/StoreChangeFactory';
-import { deserialise, serialise } from './utils/serialiser';
+import { deserialise, serialise, DeserialiserFunction, SerialiserFunction } from './utils/serialiser';
 
 /**
  * A __Store__ represents the underlying data structure of a {@link StorageArea}.
@@ -35,10 +35,6 @@ export default class Store {
 
 	/**
 	 * Initialises a new instance of Store with the same store.
-	 *
-	 * For this reason, if the store contains values of any other type than string,
-	 * the clone operation will result in unexpected behaviour as any objects are
-	 * passed-by-reference.
 	 */
 	clone() {
 		return new Store(this.data.entries(), this.serialise, this.deserialise);

@@ -6,8 +6,8 @@
 import { CHROME_LOCAL_STORAGE_DEFAULT_QUOTA, CHROME_SESSION_STORAGE_DEFAULT_QUOTA, CHROME_SYNC_STORAGE_DEFAULT_QUOTA } from './Constants';
 import { LocalStorageArea, ManagedStorageArea, SessionStorageArea, StorageAreaFactory, SyncStorageArea } from './StorageAreaFactory';
 import Store from './Store';
-import { AccessLevel, DeserialiserFunction, SerialiserFunction } from './Types';
-import { serialise } from './utils/serialiser';
+import { AccessLevel } from './Types';
+import { serialise, DeserialiserFunction, SerialiserFunction } from './utils/serialiser';
 
 describe('StorageAreaFactory()', () => {
 	test('Store is empty by default', () => {
@@ -102,14 +102,12 @@ describe('StorageAreaFactory()', () => {
 		test('Fails when argument is an array with a string key', () => {
 			const k = StorageAreaFactory();
 
-			// @ts-expect-error Testing purposes
 			expect(k.getBytesInUse([123])).rejects.toThrow(TypeError);
 		});
 
 		test('Fails when argument has not a string key', () => {
 			const k = StorageAreaFactory();
 
-			// @ts-expect-error Testing purposes
 			expect(k.getBytesInUse(true)).rejects.toThrow(TypeError);
 		});
 	});
