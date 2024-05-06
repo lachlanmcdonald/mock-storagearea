@@ -1,28 +1,20 @@
-import { CHROME_LOCAL_STORAGE_DEFAULT_QUOTA, CHROME_MANAGED_STORAGE_DEFAULT_QUOTA, CHROME_SESSION_STORAGE_DEFAULT_QUOTA, CHROME_SYNC_STORAGE_DEFAULT_QUOTA } from './Constants';
-import { StorageAreaFactory } from './StorageAreaFactory';
+import { CHROME_LOCAL_STORAGE_DEFAULT_QUOTA, CHROME_SESSION_STORAGE_DEFAULT_QUOTA, CHROME_SYNC_STORAGE_DEFAULT_QUOTA } from './Constants';
 import Store from './Store';
-import { Quota } from './Types';
+import createStorageArea from './createStorageArea';
 
-type StorageAreaFactoryWithQuota<T> = Readonly<Omit<ReturnType<typeof StorageAreaFactory>, keyof Quota> & T>;
-
-type SyncStorageAreaInterface = StorageAreaFactoryWithQuota<typeof CHROME_SYNC_STORAGE_DEFAULT_QUOTA>;
-type LocalStorageAreaInterface = StorageAreaFactoryWithQuota<typeof CHROME_LOCAL_STORAGE_DEFAULT_QUOTA>;
-type SessionStorageAreaInterface = StorageAreaFactoryWithQuota<typeof CHROME_SESSION_STORAGE_DEFAULT_QUOTA>;
-type ManagedStorageAreaInterface = StorageAreaFactoryWithQuota<typeof CHROME_MANAGED_STORAGE_DEFAULT_QUOTA>;
-
-export const SyncStorageArea = (initialStore?: Store) : SyncStorageAreaInterface => {
-	return StorageAreaFactory(initialStore, CHROME_SYNC_STORAGE_DEFAULT_QUOTA);
+export const createLocalStorageArea = (initialStore?: Store): chrome.storage.LocalStorageArea => {
+	return createStorageArea(initialStore, CHROME_LOCAL_STORAGE_DEFAULT_QUOTA);
 };
 
-export const LocalStorageArea = (initialStore?: Store) : LocalStorageAreaInterface => {
-	return StorageAreaFactory(initialStore, CHROME_LOCAL_STORAGE_DEFAULT_QUOTA);
+export const createSyncStorageArea = (initialStore?: Store): chrome.storage.SyncStorageArea => {
+	return createStorageArea(initialStore, CHROME_SYNC_STORAGE_DEFAULT_QUOTA);
 };
 
-export const SessionStorageArea = (initialStore?: Store) : SessionStorageAreaInterface => {
-	return StorageAreaFactory(initialStore, CHROME_SESSION_STORAGE_DEFAULT_QUOTA);
+export const createSessionStorageArea = (initialStore?: Store): chrome.storage.SessionStorageArea => {
+	return createStorageArea(initialStore, CHROME_SESSION_STORAGE_DEFAULT_QUOTA);
 };
 
-export const ManagedStorageArea = (initialStore?: Store) => {
+export const createManagedStorageArea = (initialStore?: Store): chrome.storage.StorageArea => {
 	/**
 	 * Removes all items from the _Storage Area_.
 	 */
@@ -59,9 +51,9 @@ export const ManagedStorageArea = (initialStore?: Store) => {
 	};
 
 	return Object.freeze({
-		...StorageAreaFactory(initialStore),
+		...createStorageArea(initialStore),
 		clear,
 		remove,
 		set,
-	}) as ManagedStorageAreaInterface;
+	});
 };

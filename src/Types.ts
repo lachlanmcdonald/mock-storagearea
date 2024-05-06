@@ -27,15 +27,6 @@ export type StorageChanges = Record<string, {
  */
 export type OnChangedListener = (changes: StorageChanges, areaName?: string) => void;
 
-export enum AccessLevel {
-	TRUSTED_CONTEXTS = 'TRUSTED_CONTEXTS',
-	TRUSTED_AND_UNTRUSTED_CONTEXTS = 'TRUSTED_AND_UNTRUSTED_CONTEXTS'
-}
-
-export type SetAccessLevelOptions = Partial<{
-	accessLevel?: AccessLevel,
-}>;
-
 export type PropertyChanges = Record<string, {
 	before: {
 		value: string | null

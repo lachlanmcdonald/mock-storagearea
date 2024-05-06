@@ -4,16 +4,13 @@
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
 import OnChangedEvent from './OnChangedEvent';
-import { StorageAreaFactory } from './StorageAreaFactory';
-
-type StorageAreaLike = ReturnType<typeof StorageAreaFactory>;
 
 /**
  * The __onChanged__ factory binds callbacks to the `onChanged` event on each
  * of the provide _Storage Areas_ and passes through the `areaName` argument
  * to the callback.
  */
-export default function onChanged(areas: Record<string, StorageAreaLike>) {
+export default function onChanged(areas: Record<string, chrome.storage.StorageArea>) {
 	const { dispatch, external } = OnChangedEvent();
 
 	if (typeof areas !== 'object') {

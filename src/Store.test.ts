@@ -6,33 +6,40 @@
 import Store from './Store';
 import { serialise } from './utils/serialiser';
 
+const DEFAULT_STORE = [
+	['straw', serialise(true)],
+	['state', serialise(false)],
+	['final', serialise(12.3977)],
+	['pocket', serialise('inside')],
+];
+
 describe('.clone()', () => {
 	test('Stores are identical after cloning', () => {
-		const k = new Store([
-			['test', serialise(123)],
-		]);
-		const j = k.clone();
+		const original = new Store(DEFAULT_STORE);
 
-		expect(k.compare(j)).toMatchObject({});
-		expect(k.serialise).toBe(j.serialise);
-		expect(k.deserialise).toBe(j.deserialise);
+		const clone = original.clone();
+
+		expect(original.compare(clone)).toMatchObject({});
+		expect(original.serialiser).toBe(clone.serialiser);
+		expect(original.deserialiser).toBe(clone.deserialiser);
 	});
 });
 
 describe('.get()', () => {
 	test('Returns an deserialised value', () => {
-		const k = new Store([
-			['test', serialise(123)],
-		]);
+		const k = new Store(DEFAULT_STORE);
 
-		expect(k.get('test')).toBe(123);
+		expect(k.get('straw')).toBe(true);
+		expect(k.get('state')).toBe(false);
+		expect(k.get('final')).toBe(12.3977);
+		expect(k.get('pocket')).toBe('inside');
 	});
 
 	test('Throws when the key does not exist', () => {
 		const k = new Store();
 
 		expect(() => {
-			k.get('test');
+			k.get('unknown_key');
 		}).toThrow(RangeError);
 	});
 });
@@ -40,13 +47,13 @@ describe('.get()', () => {
 describe('set()', () => {
 	test('Setting a new key returns a change description', () => {
 		const k = new Store([
-			['red', serialise(140)],
-			['blue', serialise(220)],
-			['green', serialise(790)],
+			['red', serialise(53)],
+			['blue', serialise(49)],
+			['green', serialise(21)],
 		]);
 
 		const results = k.set({
-			yellow: 123,
+			yellow: 64,
 		});
 
 		expect(results).toMatchObject({
@@ -58,7 +65,7 @@ describe('set()', () => {
 						exists: false,
 					},
 					after: {
-						value: 123,
+						value: 64,
 						exists: true,
 					},
 				},
@@ -68,13 +75,13 @@ describe('set()', () => {
 
 	test('Setting an existing key returns a change description', () => {
 		const k = new Store([
-			['red', serialise(140)],
-			['blue', serialise(220)],
-			['green', serialise(790)],
+			['red', serialise(31)],
+			['blue', serialise(21)],
+			['green', serialise(44)],
 		]);
 
 		const results = k.set({
-			red: 123,
+			red: 23,
 		});
 
 		expect(results).toMatchObject({
@@ -82,11 +89,11 @@ describe('set()', () => {
 			changes: {
 				red: {
 					before: {
-						value: 140,
+						value: 31,
 						exists: true,
 					},
 					after: {
-						value: 123,
+						value: 23,
 						exists: true,
 					},
 				},
@@ -96,8 +103,8 @@ describe('set()', () => {
 
 	test('Setting an existing key to a value that is omitted when serialised results in no change', () => {
 		const k = new Store([
-			['red', serialise(140)],
-			['blue', serialise(140)],
+			['red', serialise(58)],
+			['blue', serialise(90)],
 		]);
 
 		const results = k.set({
@@ -117,9 +124,9 @@ describe('set()', () => {
 describe('.delete()', () => {
 	test('Deleting an key returns a change description', () => {
 		const k = new Store([
-			['red', serialise(140)],
-			['blue', serialise(220)],
-			['green', serialise(790)],
+			['red', serialise(48)],
+			['blue', serialise(89)],
+			['green', serialise(96)],
 		]);
 
 		const results = k.delete('red');
@@ -129,7 +136,7 @@ describe('.delete()', () => {
 			changes: {
 				red: {
 					before: {
-						value: 140,
+						value: 48,
 						exists: true,
 					},
 					after: {
@@ -143,9 +150,9 @@ describe('.delete()', () => {
 
 	test('Deleting an array of keys returns a change description', () => {
 		const k = new Store([
-			['red', serialise(140)],
-			['blue', serialise(220)],
-			['green', serialise(790)],
+			['red', serialise(95)],
+			['blue', serialise(90)],
+			['green', serialise(92)],
 		]);
 
 		const results = k.delete(['red', 'blue']);
@@ -155,7 +162,7 @@ describe('.delete()', () => {
 			changes: {
 				red: {
 					before: {
-						value: 140,
+						value: 95,
 						exists: true,
 					},
 					after: {
@@ -165,7 +172,7 @@ describe('.delete()', () => {
 				},
 				blue: {
 					before: {
-						value: 220,
+						value: 90,
 						exists: true,
 					},
 					after: {

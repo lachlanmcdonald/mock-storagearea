@@ -74,22 +74,9 @@ export const serialise = (value: unknown, parentIsArray = false, parentIsObject 
 };
 
 /**
- * Deserialises a value previously serialised with {@link serialise()}, that is, a
- * value which was serialised in accordance with the observed serialisation rules in Chrome.
- */
-export const deserialise = (value: string) => {
-	return JSON.parse(value);
-};
-
-/**
  * A function which serialises a value for storage within a Storage Area.
  * - If a string is returned, the property has been successfully serialised.
  * - If `null` is returned, the property should be omitted. Please note that serialise() may also
  *   return the string `"null"`, which as per above, means the value of `null` was successfully serialised.
  */
-export type SerialiserFunction = typeof serialise;
-
-/**
- * Deserialises a value previously serialised by {@link SerialiserFunction}.
- */
-export type DeserialiserFunction = typeof deserialise;
+export type SerialiseFunction = typeof serialise;

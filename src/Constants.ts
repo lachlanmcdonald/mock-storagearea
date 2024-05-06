@@ -19,23 +19,23 @@ export const UNLIMITED_QUOTA : Quota = {
 };
 
 /**
- * Default quota for local storage.
+ * Default quota for local storage in Chrome.
  */
-export const CHROME_LOCAL_STORAGE_DEFAULT_QUOTA : Partial<Quota> = {
+export const CHROME_LOCAL_STORAGE_DEFAULT_QUOTA = {
 	QUOTA_BYTES: 10485760,
 };
 
 /**
- * Default quota for session storage.
+ * Default quota for session storage in Chrome.
  */
-export const CHROME_SESSION_STORAGE_DEFAULT_QUOTA : Partial<Quota> = {
+export const CHROME_SESSION_STORAGE_DEFAULT_QUOTA = {
 	QUOTA_BYTES: 10485760,
 };
 
 /**
- * Default quota for sync storage.
+ * Default quota for sync storage in Chrome.
  */
-export const CHROME_SYNC_STORAGE_DEFAULT_QUOTA : Partial<Quota> = {
+export const CHROME_SYNC_STORAGE_DEFAULT_QUOTA = {
 	MAX_ITEMS: 512,
 	MAX_SUSTAINED_WRITE_OPERATIONS_PER_MINUTE: 1000000,
 	MAX_WRITE_OPERATIONS_PER_HOUR: 1800,
@@ -45,6 +45,6 @@ export const CHROME_SYNC_STORAGE_DEFAULT_QUOTA : Partial<Quota> = {
 };
 
 /**
- * Default quota for managed storage.
+ * Default quota for managed storage in Chrome.
  */
-export const CHROME_MANAGED_STORAGE_DEFAULT_QUOTA : Partial<Quota> = {};
+export const CHROME_MANAGED_STORAGE_DEFAULT_QUOTA = {};

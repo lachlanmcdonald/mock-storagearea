@@ -3,21 +3,23 @@
  * This file is licensed under the MIT License
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
-import { CHROME_LOCAL_STORAGE_DEFAULT_QUOTA, CHROME_SESSION_STORAGE_DEFAULT_QUOTA, CHROME_SYNC_STORAGE_DEFAULT_QUOTA } from './Constants';
-import { LocalStorageArea, ManagedStorageArea, SessionStorageArea, StorageAreaFactory, SyncStorageArea } from './StorageAreaFactory';
+import { CHROME_LOCAL_STORAGE_DEFAULT_QUOTA, CHROME_SESSION_STORAGE_DEFAULT_QUOTA, CHROME_SYNC_STORAGE_DEFAULT_QUOTA, UNLIMITED_QUOTA } from './Constants';
+import { createManagedStorageArea, createSessionStorageArea, createLocalStorageArea, createSyncStorageArea } from './StorageAreas';
 import Store from './Store';
-import { AccessLevel } from './Types';
-import { serialise, DeserialiserFunction, SerialiserFunction } from './utils/serialiser';
+import { Quota } from './Types';
+import { serialise, SerialiseFunction } from './utils/serialiser';
+import { DeserialiseFunction } from './utils/deserialise';
+import createStorageArea from './createStorageArea';
 
 describe('StorageAreaFactory()', () => {
 	test('Store is empty by default', () => {
-		const k = StorageAreaFactory();
+		const k = createStorageArea();
 
 		expect(k.getBytesInUse(null)).resolves.toBe(0);
 	});
 
 	test('Store can be initialised with an existing payload', () => {
-		const k = StorageAreaFactory(new Store([
+		const k = createStorageArea(new Store([
 			['value0', serialise(1234)],
 			['value1', serialise(1234)],
 			['value2', serialise(1234)],
@@ -28,7 +30,7 @@ describe('StorageAreaFactory()', () => {
 	});
 
 	test('Store can be initialised with quota overrides', () => {
-		const k = StorageAreaFactory(null, {
+		const k = createStorageArea(null, {
 			MAX_ITEMS: 128,
 		});
 
@@ -37,16 +39,16 @@ describe('StorageAreaFactory()', () => {
 
 	test('Store can be initialised with a serialiser and deserialiser', () => {
 		/** Serialise all values as a string of 10 characters. */
-		const newSerialiser: SerialiserFunction = () => {
+		const newSerialiser: SerialiseFunction = () => {
 			return '0123456789';
 		};
 
 		/** Deserialise all values as the number 4. */
-		const newDeserialiser: DeserialiserFunction = () => {
+		const newDeserialiser: DeserialiseFunction = () => {
 			return 4;
 		};
 
-		const k = StorageAreaFactory(new Store([
+		const k = createStorageArea(new Store([
 			['value0', newSerialiser(1234)],
 			['value1', newSerialiser(1234)],
 			['value2', newSerialiser(1234)],
@@ -64,57 +66,67 @@ describe('StorageAreaFactory()', () => {
 	});
 
 	describe('.getBytesInUse()', () => {
-		test('Returns zero when empty', () => {
-			const k = StorageAreaFactory();
+		const SAMPLE = [
+			['value0', serialise(8546)],
+			['value1', serialise(4645)],
+			['value2', serialise(8176)],
+			['value3', serialise(7465)],
+		];
 
-			expect(k.getBytesInUse(null)).resolves.toBe(0);
+		describe.each([
+			['With callbacks', false],
+			['With promises', true],
+		])('%s', (withPromises) => {
+			test.each<any | jest.DoneCallback>([
+				['Returns zero when empty', [], null, 0],
+				['Returns zero when key does not exist', [], 'a', 0],
+				['Returns zero when keys do not exist', [], ['a', 'b'], 0],
+				['Returns the correct size when storage contains values', SAMPLE, null, 40],
+				['Returns zero when keys are an empty array', SAMPLE, [], 0],
+			])('%s', (_message: string, initialStore, input, expected, done) => {
+				const k = createStorageArea(new Store(initialStore));
+
+				if (withPromises) {
+					expect(k.getBytesInUse(input)).resolves.toBe(expected);
+				} else {
+					expect(() => {
+						k.getBytesInUse(input, (bytesInUse) => {
+							expect(bytesInUse).toBe(expected);
+							done();
+						});
+					});
+				}
+			});
+
+			test.each<any | jest.DoneCallback>([
+				['Fails when first argument is an array with non-string key', [123]],
+				['Fails when first argument is not a string', true],
+			])('%s', (_message, input, done) => {
+				const k = createStorageArea(new Store());
+
+				if (withPromises) {
+					expect(k.getBytesInUse(input)).rejects.toThrow(TypeError);
+				} else {
+					expect(() => {
+						k.getBytesInUse(input, () => {
+							expect(globalThis.chrome.runtime.lastError).toBe(TypeError);
+							done();
+						});
+					});
+				}
+			});
 		});
 
-		test('Returns zero when key does not exist', () => {
-			const k = StorageAreaFactory();
+		test('Returns a promise of the total size when arguments are not provided', () => {
+			const k = createStorageArea(new Store(SAMPLE));
 
-			expect(k.getBytesInUse('key')).resolves.toBe(0);
-		});
-
-		test('Returns zero when keys do not exist', () => {
-			const k = StorageAreaFactory();
-
-			expect(k.getBytesInUse(['key1', 'key2'])).resolves.toBe(0);
-		});
-
-		test('Returns the correct size when storage contains values', () => {
-			const k = StorageAreaFactory(new Store([
-				['value0', serialise(1234)],
-				['value1', serialise(1234)],
-				['value2', serialise(1234)],
-				['value3', serialise(1234)],
-			]));
-
-			expect(k.getBytesInUse(null)).resolves.toBe(40);
-		});
-
-		test('Fails when argument is not provided', () => {
-			const k = StorageAreaFactory();
-
-			expect(k.getBytesInUse()).rejects.toThrow(TypeError);
-		});
-
-		test('Fails when argument is an array with a string key', () => {
-			const k = StorageAreaFactory();
-
-			expect(k.getBytesInUse([123])).rejects.toThrow(TypeError);
-		});
-
-		test('Fails when argument has not a string key', () => {
-			const k = StorageAreaFactory();
-
-			expect(k.getBytesInUse(true)).rejects.toThrow(TypeError);
+			expect(k.getBytesInUse()).resolves.toBe(40);
 		});
 	});
 
 	describe('.clear()', () => {
 		test('Removes all existing items', () => {
-			const k = StorageAreaFactory(new Store([
+			const k = createStorageArea(new Store([
 				['red', serialise(140)],
 				['blue', serialise(220)],
 				['green', serialise(790)],
@@ -126,7 +138,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_HOUR is exceeded', () => {
-			const k = StorageAreaFactory(null, {
+			const k = createStorageArea(null, {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 			});
 
@@ -136,7 +148,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_MINUTE is exceeded', () => {
-			const k = StorageAreaFactory(null, {
+			const k = createStorageArea(null, {
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
 
@@ -146,7 +158,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Rejects MAX_WRITE_OPERATIONS_PER_HOUR before MAX_WRITE_OPERATIONS_PER_MINUTE', () => {
-			const k = StorageAreaFactory(null, {
+			const k = createStorageArea(null, {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
@@ -157,7 +169,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Failed operations due to an exceeded quota will not modify state', () => {
-			const k = StorageAreaFactory(new Store([
+			const k = createStorageArea(new Store([
 				['a', serialise('original')],
 			]), {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
@@ -177,7 +189,7 @@ describe('StorageAreaFactory()', () => {
 
 	describe('.get()', () => {
 		test('Returns a value when it exists', () => {
-			const k = StorageAreaFactory(new Store([
+			const k = createStorageArea(new Store([
 				['test', serialise(123)],
 			]));
 
@@ -187,7 +199,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Only returns keys which exist', () => {
-			const k = StorageAreaFactory(new Store([
+			const k = createStorageArea(new Store([
 				['test', serialise(123)],
 			]));
 
@@ -197,7 +209,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Returns default values for missing keys', () => {
-			const k = StorageAreaFactory(new Store([
+			const k = createStorageArea(new Store([
 				['test', serialise(123)],
 			]));
 
@@ -213,7 +225,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Returns all keys if null is provided', () => {
-			const k = StorageAreaFactory(new Store([
+			const k = createStorageArea(new Store([
 				['a', serialise(123)],
 				['b', serialise(123)],
 				['c', serialise(123)],
@@ -227,13 +239,13 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Returns an empty object if store is empty and null is provided', () => {
-			const k = StorageAreaFactory();
+			const k = createStorageArea();
 
 			expect(k.get(null)).resolves.toMatchObject({});
 		});
 
 		test('Returns an empty object if no keys exist and no default values provided', () => {
-			const k = StorageAreaFactory();
+			const k = createStorageArea();
 
 			expect(k.get(['a', 'b', 'c'])).resolves.toMatchObject({});
 		});
@@ -272,7 +284,7 @@ describe('StorageAreaFactory()', () => {
 		 *    }
 		 */
 		test('Returns full objects when a default is provided on a nested object', () => {
-			const k = StorageAreaFactory(new Store([
+			const k = createStorageArea(new Store([
 				['a', serialise({
 					b: 123,
 					c: { d: 123 },
@@ -302,7 +314,7 @@ describe('StorageAreaFactory()', () => {
 
 	describe('.set()', () => {
 		test('Can set an item', () => {
-			const k = StorageAreaFactory();
+			const k = createStorageArea();
 
 			expect(k.set({
 				test: 'value',
@@ -310,7 +322,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_HOUR is exceeded', () => {
-			const k = StorageAreaFactory(null, {
+			const k = createStorageArea(null, {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 			});
 
@@ -330,7 +342,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_MINUTE is exceeded', () => {
-			const k = StorageAreaFactory(null, {
+			const k = createStorageArea(null, {
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
 
@@ -350,7 +362,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Rejects MAX_WRITE_OPERATIONS_PER_HOUR before MAX_WRITE_OPERATIONS_PER_MINUTE', () => {
-			const k = StorageAreaFactory(null, {
+			const k = createStorageArea(null, {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
@@ -371,7 +383,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Will reject with an error if MAX_ITEMS is exceeded', () => {
-			const k = StorageAreaFactory(null, {
+			const k = createStorageArea(null, {
 				MAX_ITEMS: 3,
 			});
 
@@ -386,7 +398,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Will reject with an error if QUOTA_BYTES is exceeded', () => {
-			const k = StorageAreaFactory(null, {
+			const k = createStorageArea(null, {
 				QUOTA_BYTES: 64,
 			});
 
@@ -403,7 +415,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Will reject with an error if QUOTA_BYTES_PER_ITEM is exceeded', () => {
-			const k = StorageAreaFactory(null, {
+			const k = createStorageArea(null, {
 				QUOTA_BYTES_PER_ITEM: 32,
 			});
 
@@ -415,7 +427,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Failed operations due to an exceeded quota will not modify state', () => {
-			const k = StorageAreaFactory(new Store([
+			const k = createStorageArea(new Store([
 				['a', serialise('original')],
 			]), {
 				QUOTA_BYTES_PER_ITEM: 32,
@@ -435,7 +447,7 @@ describe('StorageAreaFactory()', () => {
 
 	describe('.remove()', () => {
 		test('Can remove a key', () => {
-			const k = StorageAreaFactory(new Store([
+			const k = createStorageArea(new Store([
 				['value0', serialise(1234)],
 				['value1', serialise(1234)],
 				['value2', serialise(1234)],
@@ -446,7 +458,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Can remove keys', () => {
-			const k = StorageAreaFactory(new Store([
+			const k = createStorageArea(new Store([
 				['value0', serialise(1234)],
 				['value1', serialise(1234)],
 				['value2', serialise(1234)],
@@ -457,19 +469,19 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Can remove a non-existant key', () => {
-			const k = StorageAreaFactory();
+			const k = createStorageArea();
 
 			expect(k.remove('key')).resolves.not.toThrow();
 		});
 
 		test('Can remove non-existant keys', () => {
-			const k = StorageAreaFactory();
+			const k = createStorageArea();
 
 			expect(k.remove(['key1', 'key2'])).resolves.not.toThrow();
 		});
 
 		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_HOUR is exceeded', () => {
-			const k = StorageAreaFactory(null, {
+			const k = createStorageArea(null, {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 			});
 
@@ -479,7 +491,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_MINUTE is exceeded', () => {
-			const k = StorageAreaFactory(null, {
+			const k = createStorageArea(null, {
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
 
@@ -489,7 +501,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Rejects MAX_WRITE_OPERATIONS_PER_HOUR before MAX_WRITE_OPERATIONS_PER_MINUTE', () => {
-			const k = StorageAreaFactory(null, {
+			const k = createStorageArea(null, {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
@@ -500,7 +512,7 @@ describe('StorageAreaFactory()', () => {
 		});
 
 		test('Failed operations due to an exceeded quota will not modify state', () => {
-			const k = StorageAreaFactory(new Store([
+			const k = createStorageArea(new Store([
 				['a', serialise('original')],
 			]), {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
@@ -518,57 +530,55 @@ describe('StorageAreaFactory()', () => {
 
 	describe('setAccessLevel()', () => {
 		test('Can set access level', () => {
-			const k = StorageAreaFactory();
+			const k = createStorageArea();
 
 			k.setAccessLevel({
-				accessLevel: AccessLevel.TRUSTED_AND_UNTRUSTED_CONTEXTS,
+				accessLevel: chrome.storage.AccessLevel.TRUSTED_AND_UNTRUSTED_CONTEXTS,
 			});
 			k.setAccessLevel({
-				accessLevel: AccessLevel.TRUSTED_CONTEXTS,
+				accessLevel: chrome.storage.AccessLevel.TRUSTED_CONTEXTS,
 			});
 		});
 	});
 });
 
-describe('LocalStorageArea', () => {
-	describe('Quotas are set to the defaults', () => {
-		const tests = Object.entries(CHROME_LOCAL_STORAGE_DEFAULT_QUOTA) as Array<[ keyof typeof CHROME_LOCAL_STORAGE_DEFAULT_QUOTA, number ]>;
+describe.each([
+	['LocalStorageArea', createLocalStorageArea, CHROME_LOCAL_STORAGE_DEFAULT_QUOTA],
+	['SessionStorageArea', createSessionStorageArea, CHROME_SESSION_STORAGE_DEFAULT_QUOTA],
+	['SyncStorageArea', createSyncStorageArea, CHROME_SYNC_STORAGE_DEFAULT_QUOTA],
+])('%s', (_name, factoryFunction, defaultQuotas) => {
+	const expectUndefined : Array<[keyof Quota]> = [];
+	const expectDefined : Array<[keyof Quota, number]> = [];
 
-		test.each(tests)('%s is %p', (property, value) => {
-			const k = LocalStorageArea();
+	for (const key of Object.keys(UNLIMITED_QUOTA) as Array<keyof Quota>) {
+		if (Object.hasOwn(defaultQuotas, key) && defaultQuotas[key as keyof typeof defaultQuotas] !== Infinity) {
+			expectDefined.push([
+				key,
+				defaultQuotas[key as keyof typeof defaultQuotas] as number,
+			]);
+		} else {
+			expectUndefined.push([key]);
+		}
+	}
 
-			expect(k[property]).toBe(value);
-		});
+	test.each(expectUndefined)('%s to be undefined', (property) => {
+		const k = factoryFunction();
+
+		// @ts-expect-error For test purposes
+		expect(k[property]).toBeUndefined();
 	});
-});
 
-describe('SessionStorageArea', () => {
-	describe('Quotas are set to the defaults', () => {
-		const tests = Object.entries(CHROME_SESSION_STORAGE_DEFAULT_QUOTA) as Array<[ keyof typeof CHROME_SESSION_STORAGE_DEFAULT_QUOTA, number ]>;
+	test.each(expectDefined)('%s defaults to %p', (property, value) => {
+		const k = factoryFunction();
 
-		test.each(tests)('%s is %p', (property, value) => {
-			const k = SessionStorageArea();
-
-			expect(k[property]).toBe(value);
-		});
-	});
-});
-
-describe('SyncStorageArea', () => {
-	describe('Quotas are set to the defaults', () => {
-		const tests = Object.entries(CHROME_SYNC_STORAGE_DEFAULT_QUOTA) as Array<[ keyof typeof CHROME_SYNC_STORAGE_DEFAULT_QUOTA, number ]>;
-
-		test.each(tests)('%s is %p', (property, value) => {
-			const k = SyncStorageArea();
-
-			expect(k[property]).toBe(value);
-		});
+		// @ts-expect-error For test purposes
+		expect(k[property]).toBe(value);
 	});
 });
 
 describe('ManagedStorageArea', () => {
 	test('Calling set() throws an error', () => {
-		const k = ManagedStorageArea();
+		const k = createManagedStorageArea();
 
 		expect(k.set({
 			test: 123,
@@ -576,13 +586,13 @@ describe('ManagedStorageArea', () => {
 	});
 
 	test('Calling remove() throws an error', () => {
-		const k = ManagedStorageArea();
+		const k = createManagedStorageArea();
 
 		expect(k.remove('test')).rejects.toThrow(/cannot mutate/ui);
 	});
 
 	test('Calling clear() throws an error', () => {
-		const k = ManagedStorageArea();
+		const k = createManagedStorageArea();
 
 		expect(k.clear()).rejects.toThrow(/cannot mutate/ui);
 	});

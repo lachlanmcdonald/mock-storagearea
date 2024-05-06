@@ -3,37 +3,39 @@
  * This file is licensed under the MIT License
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
-import { LocalStorageArea, SessionStorageArea } from './StorageAreaFactory';
+import { createLocalStorageArea, createSessionStorageArea } from './StorageAreas';
 import Store from './Store';
 import onChanged from './onChanged';
 import { serialise } from './utils/serialiser';
 
 interface Chrome {
-	local: ReturnType<typeof LocalStorageArea>
-	session: ReturnType<typeof SessionStorageArea>
-	onChanged: ReturnType<typeof onChanged>
+	onChanged: ReturnType<typeof onChanged>,
+	storage: {
+		local: chrome.storage.LocalStorageArea,
+		session: chrome.storage.SessionStorageArea,
+	},
 }
 
 describe('onChanged()', () => {
 	let chrome = {} as Chrome;
 
 	beforeEach(() => {
-		const sessionAreaStore = new Store([
+		const session = createSessionStorageArea(new Store([
 			['apple', serialise('Error')],
 			['orange', serialise('Error')],
-		]);
-		const localAreaStore = new Store([
+		]));
+
+		const local = createLocalStorageArea(new Store([
 			['apple', serialise(1234)],
 			['orange', serialise(512)],
-		]);
-
-		const session = SessionStorageArea(sessionAreaStore);
-		const local = LocalStorageArea(localAreaStore);
+		]));
 
 		chrome = {
-			session,
-			local,
 			onChanged: onChanged({ session, local }),
+			storage: {
+				session,
+				local,
+			},
 		};
 	});
 

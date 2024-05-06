@@ -4,66 +4,41 @@
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
 import {
-	UNLIMITED_QUOTA,
 	CHROME_LOCAL_STORAGE_DEFAULT_QUOTA,
+	CHROME_MANAGED_STORAGE_DEFAULT_QUOTA,
 	CHROME_SESSION_STORAGE_DEFAULT_QUOTA,
 	CHROME_SYNC_STORAGE_DEFAULT_QUOTA,
-	LocalStorageArea,
-	ManagedStorageArea,
-	SessionStorageArea,
-	SyncStorageArea,
+	createLocalStorageArea,
+	createManagedStorageArea,
+	createSessionStorageArea,
+	createStorageArea,
+	createSyncStorageArea,
 	deserialise,
+	onChanged,
 	serialise,
 	Store,
-	onChanged
+	UNLIMITED_QUOTA,
 } from './index';
 
+const IMPORTS = [
+	['CHROME_LOCAL_STORAGE_DEFAULT_QUOTA', CHROME_LOCAL_STORAGE_DEFAULT_QUOTA],
+	['CHROME_MANAGED_STORAGE_DEFAULT_QUOTA', CHROME_MANAGED_STORAGE_DEFAULT_QUOTA],
+	['CHROME_SESSION_STORAGE_DEFAULT_QUOTA', CHROME_SESSION_STORAGE_DEFAULT_QUOTA],
+	['CHROME_SYNC_STORAGE_DEFAULT_QUOTA', CHROME_SYNC_STORAGE_DEFAULT_QUOTA],
+	['createLocalStorageArea', createLocalStorageArea],
+	['createManagedStorageArea', createManagedStorageArea],
+	['createSessionStorageArea', createSessionStorageArea],
+	['createStorageArea', createStorageArea],
+	['createSyncStorageArea', createSyncStorageArea],
+	['deserialise', deserialise],
+	['onChanged', onChanged],
+	['serialise', serialise],
+	['Store', Store],
+	['UNLIMITED_QUOTA', UNLIMITED_QUOTA],
+];
+
 describe('Exports', () => {
-	test('UNLIMITED_QUOTA', () => {
-		expect(UNLIMITED_QUOTA).toBeTruthy();
-	});
-
-	test('CHROME_LOCAL_STORAGE_DEFAULT_QUOTA', () => {
-		expect(CHROME_LOCAL_STORAGE_DEFAULT_QUOTA).toBeTruthy();
-	});
-
-	test('CHROME_SESSION_STORAGE_DEFAULT_QUOTA', () => {
-		expect(CHROME_SESSION_STORAGE_DEFAULT_QUOTA).toBeTruthy();
-	});
-
-	test('CHROME_SYNC_STORAGE_DEFAULT_QUOTA', () => {
-		expect(CHROME_SYNC_STORAGE_DEFAULT_QUOTA).toBeTruthy();
-	});
-
-	test('LocalStorageArea', () => {
-		expect(LocalStorageArea).toBeTruthy();
-	});
-
-	test('ManagedStorageArea', () => {
-		expect(ManagedStorageArea).toBeTruthy();
-	});
-
-	test('SessionStorageArea', () => {
-		expect(SessionStorageArea).toBeTruthy();
-	});
-
-	test('SyncStorageArea', () => {
-		expect(SyncStorageArea).toBeTruthy();
-	});
-
-	test('deserialise', () => {
-		expect(deserialise).toBeTruthy();
-	});
-
-	test('serialise', () => {
-		expect(serialise).toBeTruthy();
-	});
-
-	test('Store', () => {
-		expect(Store).toBeTruthy();
-	});
-
-	test('onChanged', () => {
-		expect(onChanged).toBeTruthy();
+	test.each(IMPORTS)('%s', (_name, exported) => {
+		expect(exported).toBeTruthy();
 	});
 });

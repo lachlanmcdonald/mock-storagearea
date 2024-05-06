@@ -5,39 +5,39 @@
  */
 import { PropertyChanges } from './Types';
 import StoreChangeFactory from './utils/StoreChangeFactory';
-import { deserialise, serialise, DeserialiserFunction, SerialiserFunction } from './utils/serialiser';
+import { serialise, SerialiseFunction } from './utils/serialiser';
+import { deserialise, DeserialiseFunction } from './utils/deserialise';
 
 /**
  * A __Store__ represents the underlying data structure of a {@link StorageArea}.
  *
- * Any operation which modifies the __Store__ (`.set()` or `.delete()`) will
- * not modify the instance itself, but return a new instance with the modifications
- * and changes, allowing the result to be inspected.
- *
- * Values in the __Store__ are serialised using using {@link serialise}, and as such,
- * some values may throw an exception or be ignored.
+ * - Any operation which modifies the __Store__ (`.set()` or `.delete()`) will
+ *   not modify the instance itself, but return a new instance with the modifications
+ *   and changes, allowing the result to be inspected.
+ * - Values in the __Store__ are serialised using using {@link serialise}, and as such,
+ *   some values may throw an exception or be ignored.
  */
 export default class Store {
-	serialise: SerialiserFunction;
-	deserialise: DeserialiserFunction;
+	serialiser: SerialiseFunction;
+	deserialiser: DeserialiseFunction;
 	data: Map<string, string>;
 
 	/**
 	 * Initialises a new instance of Store with the optional payload
 	 * used as the initial store. The payload can be any value accepted by the __Map__ constructor,
-	 * however, the values must be serialised strings (using {@link serialise}).
+	 * The values of payload must be serialised (using {@link serialise}).
 	 */
-	constructor(payload?: Iterable<any>, serialiser?: SerialiserFunction, deserialiser?: DeserialiserFunction) {
+	constructor(payload?: Iterable<any>, serialiser?: SerialiseFunction, deserialiser?: DeserialiseFunction) {
 		this.data = new Map(payload || []);
-		this.serialise = serialiser || serialise;
-		this.deserialise = deserialiser || deserialise;
+		this.serialiser = serialiser || serialise;
+		this.deserialiser = deserialiser || deserialise;
 	}
 
 	/**
 	 * Initialises a new instance of Store with the same store.
 	 */
 	clone() {
-		return new Store(this.data.entries(), this.serialise, this.deserialise);
+		return new Store(this.data.entries(), this.serialiser, this.deserialiser);
 	}
 
 	/**
@@ -53,7 +53,7 @@ export default class Store {
 	 */
 	get(key: string) {
 		if (this.has(key)) {
-			return this.deserialise(this.data.get(key) as string);
+			return this.deserialiser(this.data.get(key) as string);
 		} else {
 			throw new RangeError(`key does not exist in store: ${ key }`);
 		}
@@ -68,7 +68,7 @@ export default class Store {
 
 		for (const key in payload) {
 			if (Object.hasOwn(payload, key)) {
-				const serialisedValue = this.serialise(payload[key]);
+				const serialisedValue = this.serialiser(payload[key]);
 
 				if (typeof serialisedValue === 'string') {
 					mutatedStore.data.set(key, serialisedValue);
@@ -115,7 +115,10 @@ export default class Store {
 	compare(input: Store) {
 		const results = {} as PropertyChanges;
 
-		const keys = [...this.keys(), ...input.keys()];
+		const keys = [
+			...this.keys(),
+			...input.keys(),
+		];
 
 		for (const key of keys) {
 			const existsBefore = this.has(key);
@@ -173,28 +176,27 @@ export default class Store {
 	}
 
 	/**
-	 * Returns the total size of the store in bytes.
+	 * Returns the total size of the store in bytes. The size is calculated as the
+	 * string length of the key plus the string length of the serialised value
+	 * for every item in the store.
 	 */
 	get totalBytes() {
 		return Object.values(this.sizeInBytes).reduce((k, v) => k + v, 0);
 	}
 
-	/**
-	 * Returns the number of items within the store.
-	 */
 	get count() {
 		return this.data.size;
 	}
 
 	keys() {
- return this.data.keys();
-}
+		return this.data.keys();
+	}
 
 	values() {
- return this.data.values();
-}
+		return this.data.values();
+	}
 
 	entries() {
- return this.data.entries();
-}
+		return this.data.entries();
+	}
 }

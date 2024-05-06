@@ -15,7 +15,7 @@
  * @param writesPerHourCache Cache containing a tally of writes, keyed to the hour
  * @param writesPerMinuteCache Cache containing a tally of writes, keyed to the minute
  */
-export default function incrementWriteQuota(maxWritesPerHour: number, maxWritesPerMinute: number, writesPerHourCache: Record<string, number>, writesPerMinuteCache: Record<string, number>, timestamp?: number | null) {
+export default function updateWriteQuota(maxWritesPerHour: number, maxWritesPerMinute: number, writesPerHourCache: Record<string, number>, writesPerMinuteCache: Record<string, number>, timestamp?: number | null) {
 	const now = new Date(typeof timestamp === 'number' ? timestamp : Date.now());
 	const fullDaysSinceEpoch = Math.floor(now.valueOf() / 86400000);
 	const hourKey = `${ fullDaysSinceEpoch }:${ now.getHours }`;
