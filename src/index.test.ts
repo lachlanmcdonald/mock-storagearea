@@ -14,6 +14,7 @@ import {
 	createStorageArea,
 	createSyncStorageArea,
 	deserialise,
+	inspect,
 	onChanged,
 	serialise,
 	Store,
@@ -31,6 +32,7 @@ const IMPORTS = [
 	['createStorageArea', createStorageArea],
 	['createSyncStorageArea', createSyncStorageArea],
 	['deserialise', deserialise],
+	['inspect', inspect],
 	['onChanged', onChanged],
 	['serialise', serialise],
 	['Store', Store],
@@ -40,5 +42,16 @@ const IMPORTS = [
 describe('Exports', () => {
 	test.each(IMPORTS)('%s', (_name, exported) => {
 		expect(exported).toBeTruthy();
+	});
+});
+
+describe('inspect()', () => {
+	test('Can inspect storage areas', () => {
+		const k = createLocalStorageArea();
+
+		const meta = inspect(k);
+
+		expect(meta).not.toBeNull();
+		expect(meta!.quota).toMatchObject(CHROME_LOCAL_STORAGE_DEFAULT_QUOTA);
 	});
 });

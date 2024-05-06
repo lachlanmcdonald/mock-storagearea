@@ -35,6 +35,17 @@ const dispatchEvent = (dispatcher: (changes: Record<string, chrome.storage.Stora
 	dispatcher(temp);
 };
 
+const STORAGE_AREA_MAP : WeakMap<chrome.storage.StorageArea, {
+	writeOperationsPerHour: Record<string, number>,
+	writeOperationsPerMinute: Record<string, number>,
+	quota: Quota,
+	store: Store,
+}> = new WeakMap();
+
+export const inspect = (storageArea: chrome.storage.StorageArea) => {
+	return STORAGE_AREA_MAP.has(storageArea) ? STORAGE_AREA_MAP.get(storageArea) : null;
+};
+
 export default function createStorageArea<Q extends Partial<Quota>>(initialStore?: Store | null, quotas?: Q) : chrome.storage.StorageArea & Q {
 	/**
 	 * Internal quota limits.
@@ -310,7 +321,7 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 
 	function setAccessLevel(accessOptions: { accessLevel: chrome.storage.AccessLevel }) : Promise<void>;
 	function setAccessLevel(accessOptions: { accessLevel: chrome.storage.AccessLevel }, callback: () => void) : void;
-	function setAccessLevel(accessOptions: { accessLevel: chrome.storage.AccessLevel }, callback?: () => void) : Promise<void> | void {
+	function setAccessLevel(_accessOptions: { accessLevel: chrome.storage.AccessLevel }, callback?: () => void) : Promise<void> | void {
 		// eslint-disable-next-line no-empty-function
 		return handleLegacyCallbacks(() => {}, callback ? callback : null);
 	}
@@ -330,11 +341,20 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 		if (Object.hasOwn(mergedQuotas, key)) {
 			const k = mergedQuotas[key as keyof Quota];
 
+			// Do not export infinite quotas
 			if (Number.isFinite(k)) {
 				obj[key as keyof Quota] = k;
 			}
 		}
 	}
+
+	// Store a weak reference to this object for inspection-purposes
+	STORAGE_AREA_MAP.set(obj, {
+		writeOperationsPerHour,
+		writeOperationsPerMinute,
+		quota: mergedQuotas,
+		store,
+	});
 
 	return obj;
 }
