@@ -17,7 +17,8 @@ interface Chrome {
 }
 
 describe('onChanged()', () => {
-	let chrome = {} as Chrome;
+	// @ts-expect-error Expect to be incomplete until beforeEach
+	let chrome: Chrome = {};
 
 	beforeEach(() => {
 		const session = createSessionStorageArea(new Store([
@@ -31,7 +32,10 @@ describe('onChanged()', () => {
 		]));
 
 		chrome = {
-			onChanged: onChanged({ session, local }),
+			onChanged: onChanged({
+				session,
+				local,
+			}),
 			storage: {
 				session,
 				local,
@@ -62,9 +66,9 @@ describe('onChanged()', () => {
 			done();
 		});
 
-		expect(chrome.local.set({
+		expect(chrome.storage.local.set({
 			apple: 4567,
-		})).resolves.not.toThrowError();
+		})).resolves.not.toThrow();
 	});
 
 	test('Callback is called when a value is added', done => {
@@ -80,9 +84,9 @@ describe('onChanged()', () => {
 			done();
 		});
 
-		expect(chrome.local.set({
+		expect(chrome.storage.local.set({
 			newKey: 1234,
-		})).resolves.not.toThrowError();
+		})).resolves.not.toThrow();
 	});
 
 	test('Callback is called when a value is removed', done => {
@@ -98,7 +102,7 @@ describe('onChanged()', () => {
 			done();
 		});
 
-		expect(chrome.local.remove(['apple'])).resolves.not.toThrowError();
+		expect(chrome.storage.local.remove(['apple'])).resolves.not.toThrow();
 	});
 
 	test('Callback is called on clear()', done => {
@@ -118,6 +122,6 @@ describe('onChanged()', () => {
 			done();
 		});
 
-		expect(chrome.local.clear()).resolves.not.toThrowError();
+		expect(chrome.storage.local.clear()).resolves.not.toThrow();
 	});
 });
