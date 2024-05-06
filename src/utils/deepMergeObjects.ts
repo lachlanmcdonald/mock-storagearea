@@ -8,8 +8,8 @@
  * Recursively merges the `over` object over the `under` object. Values are only updated
  * when `undefined`.
  *
- * @param under {object} Object to update
- * @param over {object} Input object
+ * NOTE: This behaviour is only used when calling `.get()`. Objects are not merged in this
+ * way when calling `.set()`.
  */
 export default function deepMergeObjects(under: any, over: any) {
 	const temp = {} as Record<string, any>;

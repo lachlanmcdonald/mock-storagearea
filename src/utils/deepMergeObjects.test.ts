@@ -1,3 +1,4 @@
+/* eslint-disable no-undefined */
 /*
  * Copyright (c) 2024 Lachlan McDonald. All rights reserved.
  * This file is licensed under the MIT License
@@ -152,7 +153,7 @@ test('Ignores undefined on over object', () => {
 	};
 
 	const result = deepMergeObjects(baseObject, {
-		c: undefined, // eslint-disable-line no-undefined
+		c: undefined,
 	});
 
 	expect(result).toMatchObject({
@@ -162,7 +163,7 @@ test('Ignores undefined on over object', () => {
 
 test('Ignores undefined on base object', () => {
 	const baseObject = {
-		c: undefined, // eslint-disable-line no-undefined
+		c: undefined,
 	};
 
 	const result = deepMergeObjects(baseObject, {
