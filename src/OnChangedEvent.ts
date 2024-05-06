@@ -4,11 +4,10 @@
  * This file is licensed under the MIT License
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
-import { StorageChanges } from './Types';
 
 const EVENT_NAME = 'changed';
 
-type StorageChangeCallback = (changes: StorageChanges, areaName?: string) => void;
+type StorageChangeCallback = (changes: Record<string, chrome.storage.StorageChange>, areaName?: string) => void;
 
 export default function OnChangedEvent<H extends StorageChangeCallback>() {
 	const registered = new Map() as Map<H, (event: Event) => void>;
@@ -68,7 +67,7 @@ export default function OnChangedEvent<H extends StorageChangeCallback>() {
 	 * Dispatches a new event which indicates a change has occurred within
 	 * a _Storage Area_.
 	 */
-	function dispatch(changes: StorageChanges, areaName?: string) {
+	function dispatch(changes: Record<string, chrome.storage.StorageChange>, areaName?: string) {
 		const e = new Event(EVENT_NAME);
 
 		eventData.set(e, { changes, areaName });

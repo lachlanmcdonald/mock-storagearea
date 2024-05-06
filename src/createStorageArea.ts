@@ -7,14 +7,14 @@
 import { UNLIMITED_QUOTA } from './Constants';
 import OnChangedEvent from './OnChangedEvent';
 import Store from './Store';
-import { Changes, Quota, StorageChanges } from './Types';
+import { Changes, Quota } from './Types';
 import deepMergeObjects from './utils/deepMergeObjects';
 import updateWriteQuota from './utils/incrementWriteQuota';
 
 type GetParameterKeys = string | string[] | Record<string, any> | null;
 type GetParameterCallback = (items: Record<string, any>) => void;
 
-const dispatchEvent = (dispatcher: (changes: StorageChanges) => void, changes: Changes) => {
+const dispatchEvent = (dispatcher: (changes: Record<string, chrome.storage.StorageChange>) => void, changes: Changes) => {
 	const temp = {} as Record<string, {
 		oldValue: any;
 		newValue: any;

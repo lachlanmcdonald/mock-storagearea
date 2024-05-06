@@ -14,18 +14,10 @@ export interface Quota {
 	QUOTA_BYTES_PER_ITEM: number
 }
 
-export type StorageChanges = Record<string, {
-	/** The old value of the item, if any. */
-	oldValue?: any;
-
-	/** The new value of the item, if any. */
-	newValue?: any;
-}>;
-
 /**
  * @TODO There will be two OnChangedListener's as one will include an `areaName`.
  */
-export type OnChangedListener = (changes: StorageChanges, areaName?: string) => void;
+export type OnChangedListener = (changes: Record<string, chrome.storage.StorageChange>, areaName?: string) => void;
 
 export type PropertyChanges = Record<string, {
 	before: {
