@@ -105,27 +105,22 @@ describe('StorageAreaFactory()', () => {
 				}
 			});
 
-			test.only.each<any | jest.DoneCallback>([
+			test.each([
 				['Fails when first argument is an array with non-string key', [123]],
 				['Fails when first argument is not a string', true],
-			])('%s', (_message, input: any, done) => {
+			])('%s', (_message, input) => {
 				const k = createStorageArea(new Store());
 
-				if (withPromises) {
-					// @ts-expect-error Passing "any" will make TypeScript think this signature is for a callback,
-					//                  but instead we're testing for invalid keys and want a promise.
-					k.getBytesInUse(input).catch(e => {
-						expect(e).toBeInstanceOf(TypeError);
-						done();
-					});
-				} else {
-					expect(() => {
-						k.getBytesInUse(input, () => {
-							expect(globalThis.chrome.runtime.lastError).toBeInstanceOf(TypeError);
-							done();
-						});
-					}).not.toThrow(TypeError);
-				}
+				expect(() => {
+					if (withPromises) {
+						// @ts-expect-error Type mismatch for testing purposes
+						k.getBytesInUse(input);
+					} else {
+						// @ts-expect-error Type mismatch for testing purposes
+						// eslint-disable-next-line no-empty-function
+						k.getBytesInUse(input, () => {});
+					}
+				}).toThrow(TypeError);
 			});
 		});
 
