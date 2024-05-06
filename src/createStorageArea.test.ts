@@ -65,11 +65,11 @@ describe('StorageAreaFactory()', () => {
 	describe.each([
 		['With callbacks', false],
 		['With promises', true],
-	])('%s', (_message, withPromises) => {
+	])('%s', (_message, withPromise) => {
 		test('Store is empty by default', (done) => {
 			const k = createStorageArea();
 
-			if (withPromises) {
+			if (withPromise) {
 				k.getBytesInUse(null).then((bytesInUse) => {
 					expect(bytesInUse).toBe(0);
 					done();
@@ -92,7 +92,7 @@ describe('StorageAreaFactory()', () => {
 			])('%s', (_message: string, initialStore, input: string | string | null, expected, done) => {
 				const k = createStorageArea(new Store(initialStore));
 
-				if (withPromises) {
+				if (withPromise) {
 					k.getBytesInUse(input).then(bytesInUse => {
 						expect(bytesInUse).toBe(expected);
 						done();
@@ -112,7 +112,7 @@ describe('StorageAreaFactory()', () => {
 				const k = createStorageArea(new Store());
 
 				expect(() => {
-					if (withPromises) {
+					if (withPromise) {
 						// @ts-expect-error Type mismatch for testing purposes
 						k.getBytesInUse(input);
 					} else {
@@ -134,7 +134,7 @@ describe('StorageAreaFactory()', () => {
 			test('Can set access level', (done) => {
 				const area = createStorageArea();
 
-				if (withPromises) {
+				if (withPromise) {
 					area.setAccessLevel({
 						accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS',
 					}).then(() => {
@@ -157,67 +157,137 @@ describe('StorageAreaFactory()', () => {
 				}
 			});
 		});
-	});
 
-	describe('.clear()', () => {
-		test('Removes all existing items', () => {
-			const k = createStorageArea(new Store([
-				['red', serialise(140)],
-				['blue', serialise(220)],
-				['green', serialise(790)],
-			]));
+		describe('.clear()', () => {
+			test('Removes all existing items', (done) => {
+				const k = createStorageArea(new Store([
+					['red', serialise(140)],
+					['blue', serialise(220)],
+					['green', serialise(790)],
+				]));
 
-			expect(k.getBytesInUse(null)).resolves.toBe(21);
-			expect(k.clear()).resolves.not.toThrow();
-			expect(k.getBytesInUse(null)).resolves.toBe(0);
-		});
+				if (withPromise) {
+					k.getBytesInUse(null).then(bytesInUse => {
+						expect(bytesInUse).toBe(21);
 
-		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_HOUR is exceeded', () => {
-			const k = createStorageArea(null, {
-				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
+						k.clear().then(() => {
+							k.getBytesInUse(null).then(bytesInUse => {
+								expect(bytesInUse).toBe(0);
+								done();
+							});
+						});
+					});
+				} else {
+					k.getBytesInUse(null, bytesInUse => {
+						expect(bytesInUse).toBe(21);
+
+						k.clear(() => {
+							k.getBytesInUse(null, bytesInUse => {
+								expect(bytesInUse).toBe(0);
+								done();
+							});
+						});
+					});
+				}
 			});
 
-			expect(k.clear()).resolves.not.toThrow();
-			expect(k.clear()).resolves.not.toThrow();
-			expect(k.clear()).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
-		});
+			test.each([
+				{
+					message: 'Will reject with an error if MAX_WRITE_OPERATIONS_PER_HOUR is exceeded',
+					pattern: /quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui,
+					quota: {
+						MAX_WRITE_OPERATIONS_PER_HOUR: 2,
+					},
+				}, {
+					message: 'Will reject with an error if MAX_WRITE_OPERATIONS_PER_MINUTE is exceeded',
+					pattern: /quota exceeded.+MAX_WRITE_OPERATIONS_PER_MINUTE/ui,
+					quota: {
+						MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
+					},
+				}, {
+					message: 'Either rejects MAX_WRITE_OPERATIONS_PER_HOUR or MAX_WRITE_OPERATIONS_PER_MINUTE',
+					pattern: /quota exceeded.+(MAX_WRITE_OPERATIONS_PER_HOUR|MAX_WRITE_OPERATIONS_PER_MINUTE)/ui,
+					quota: {
+						MAX_WRITE_OPERATIONS_PER_HOUR: 2,
+						MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
+					},
+				},
+			])('$message', ({ quota, pattern }, done) => {
+				const k = createStorageArea(null, quota);
 
-		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_MINUTE is exceeded', () => {
-			const k = createStorageArea(null, {
-				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
+				if (withPromise) {
+					k.clear().then(() => {
+						k.clear().then(() => {
+							k.clear().then(() => {
+								throw new Error('This branch should not be reached');
+							}).catch(e => {
+								expect(e).toBeInstanceOf(Error);
+								expect(e.message).toMatch(pattern);
+								done();
+							});
+						});
+					});
+				} else {
+					k.clear(() => {
+						k.clear(() => {
+							k.clear(() => {
+								expect(chrome.runtime.lastError).toBeInstanceOf(Error);
+								expect(chrome.runtime.lastError?.message).toMatch(pattern);
+								done();
+							});
+						});
+					});
+				}
 			});
 
-			expect(k.clear()).resolves.not.toThrow();
-			expect(k.clear()).resolves.not.toThrow();
-			expect(k.clear()).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_MINUTE/ui);
-		});
+			test('Failed operations due to an exceeded quota will not modify state', (done) => {
+				const store = createStorageArea(new Store([
+					['a', 20],
+				]), {
+					MAX_WRITE_OPERATIONS_PER_HOUR: 2,
+				});
 
-		test('Rejects MAX_WRITE_OPERATIONS_PER_HOUR before MAX_WRITE_OPERATIONS_PER_MINUTE', () => {
-			const k = createStorageArea(null, {
-				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
-				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
-			});
+				if (withPromise) {
+					store.set({ b: 10 }).then(() => {
+						store.set({ c: 77 }).then(() => {
+							store.set({ d: 94 }).then(() => {
+								throw new Error('This branch should not be reached');
+							}).catch(e => {
+								expect(e).toBeInstanceOf(Error);
+								expect(e.message).toMatch(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
 
-			expect(k.clear()).resolves.not.toThrow();
-			expect(k.clear()).resolves.not.toThrow();
-			expect(k.clear()).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
-		});
+								store.get(['a', 'b', 'c']).then(result => {
+									expect(result).toMatchObject({
+										a: 20,
+										b: 10,
+										c: 77,
+									});
 
-		test('Failed operations due to an exceeded quota will not modify state', () => {
-			const k = createStorageArea(new Store([
-				['a', serialise('original')],
-			]), {
-				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
-			});
+									done();
+								});
+							});
+						});
+					});
+				} else {
+					store.set({ b: 10 }, () => {
+						store.set({ c: 77 }, () => {
+							store.set({ d: 94 }, () => {
+								expect(chrome.runtime.lastError).toBeInstanceOf(Error);
+								expect(chrome.runtime.lastError?.message).toMatch(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
 
-			expect(k.set({ b: 123 })).resolves.not.toThrow();
-			expect(k.set({ c: 123 })).resolves.not.toThrow();
-			expect(k.clear()).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
+								store.get(['a', 'b', 'c'], result => {
+									expect(result).toMatchObject({
+										a: 20,
+										b: 10,
+										c: 77,
+									});
 
-			expect(k.get(['a', 'b', 'c'])).resolves.toMatchObject({
-				a: 'original',
-				b: 123,
-				c: 123,
+									done();
+								});
+							});
+						});
+					});
+				}
 			});
 		});
 	});

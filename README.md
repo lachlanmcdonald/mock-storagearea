@@ -48,7 +48,7 @@ const chrome = {
 
 > See: [Listening to changes](https://github.com/lachlanmcdonald/mock-storagearea/wiki/Listening-to-changes)
 
-## Adjusting quotas
+## Quotas
 
 Normally, quotas are defined by the browser and not configurable by the extension. However, for testing purposes, the quota constraints can be overwritten during initialisation.
 
