@@ -1,3 +1,4 @@
+/* eslint-disable no-empty-function */
 /*
  * Copyright (c) 2024 Lachlan McDonald. All rights reserved.
  * This file is licensed under the MIT License
@@ -18,7 +19,7 @@ const SAMPLE = [
 	['value3', serialise(7465)],
 ];
 
-describe('StorageAreaFactory()', () => {
+describe('createStorageArea()', () => {
 	test('Store can be initialised with an existing payload', () => {
 		createStorageArea(new Store([
 			['value0', serialise(1234)],
@@ -62,232 +63,115 @@ describe('StorageAreaFactory()', () => {
 		});
 	});
 
-	describe.each([
-		['With callbacks', false],
-		['With promises', true],
-	])('%s', (_message, withPromise) => {
-		test('Store is empty by default', (done) => {
-			const k = createStorageArea();
+	test.only('Store is empty by default', () => {
+		const k = createStorageArea();
 
-			if (withPromise) {
-				k.getBytesInUse(null).then((bytesInUse) => {
-					expect(bytesInUse).toBe(0);
-					done();
-				});
-			} else {
-				k.getBytesInUse(null, (bytesInUse) => {
-					expect(bytesInUse).toBe(0);
-					done();
-				});
-			}
+		expect(k.getBytesInUse()).resolves.toBe(0);
+	});
+
+	describe('.getBytesInUse()', () => {
+		test.each([
+			['Returns zero when empty', [], null, 0],
+			['Returns zero when key does not exist', [], 'a', 0],
+			['Returns zero when keys do not exist', [], ['a', 'b'], 0],
+			['Returns the correct size when storage contains values', SAMPLE, null, 40],
+			['Returns zero when keys are an empty array', SAMPLE, [], 0],
+		])('%s', (_message, initialStore, input, expected) => {
+			const k = createStorageArea(new Store(initialStore));
+
+			expect(k.getBytesInUse(input)).resolves.toBe(expected);
 		});
 
-		describe('.getBytesInUse()', () => {
-			test.each<any | jest.DoneCallback>([
-				['Returns zero when empty', [], null, 0],
-				['Returns zero when key does not exist', [], 'a', 0],
-				['Returns zero when keys do not exist', [], ['a', 'b'], 0],
-				['Returns the correct size when storage contains values', SAMPLE, null, 40],
-				['Returns zero when keys are an empty array', SAMPLE, [], 0],
-			])('%s', (_message: string, initialStore, input: string | string | null, expected, done) => {
-				const k = createStorageArea(new Store(initialStore));
+		test.each([
+			['Fails when first argument is an array with non-string key', [123]],
+			['Fails when first argument is not a string', true],
+		])('%s', (_message, input) => {
+			const k = createStorageArea(new Store());
 
-				if (withPromise) {
-					k.getBytesInUse(input).then(bytesInUse => {
-						expect(bytesInUse).toBe(expected);
-						done();
-					});
-				} else {
-					k.getBytesInUse(input, (bytesInUse) => {
-						expect(bytesInUse).toBe(expected);
-						done();
-					});
-				}
-			});
+			// @ts-expect-error Expected type mis-match
+			expect(k.getBytesInUse(input)).rejects.toBe(TypeError);
+		});
+	});
 
-			test.each([
-				['Fails when first argument is an array with non-string key', [123]],
-				['Fails when first argument is not a string', true],
-			])('%s', (_message, input) => {
-				const k = createStorageArea(new Store());
+	test('Returns a promise of the total size when arguments are not provided', () => {
+		const k = createStorageArea(new Store(SAMPLE));
 
-				expect(() => {
-					if (withPromise) {
-						// @ts-expect-error Type mismatch for testing purposes
-						k.getBytesInUse(input);
-					} else {
-						// @ts-expect-error Type mismatch for testing purposes
-						// eslint-disable-next-line no-empty-function
-						k.getBytesInUse(input, () => {});
-					}
-				}).toThrow(TypeError);
-			});
+		expect(k.getBytesInUse()).resolves.toBe(40);
+	});
+
+	describe('setAccessLevel()', () => {
+		test('Can set access level', () => {
+			const area = createStorageArea();
+
+			expect(area.setAccessLevel({
+				accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS',
+			})).resolves.not.toThrow();
+
+			expect(area.setAccessLevel({
+				accessLevel: 'TRUSTED_CONTEXTS',
+			})).resolves.not.toThrow();
+		});
+	});
+
+	describe('.clear()', () => {
+		test('Removes all existing items', () => {
+			const k = createStorageArea(new Store([
+				['red', serialise(140)],
+				['blue', serialise(220)],
+				['green', serialise(790)],
+			]));
+
+			expect(k.getBytesInUse(null)).resolves.toBe(21);
+			expect(k.clear()).resolves.not.toThrow();
+			expect(k.getBytesInUse(null)).resolves.toBe(0);
 		});
 
-		test('Returns a promise of the total size when arguments are not provided', () => {
-			const k = createStorageArea(new Store(SAMPLE));
+		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_HOUR is exceeded', () => {
+			const k = createStorageArea(null, {
+				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
+			});
 
-			expect(k.getBytesInUse()).resolves.toBe(40);
+			expect(k.clear()).resolves.not.toThrow();
+			expect(k.clear()).resolves.not.toThrow();
+			expect(k.clear()).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
 		});
 
-		describe('setAccessLevel()', () => {
-			test('Can set access level', (done) => {
-				const area = createStorageArea();
-
-				if (withPromise) {
-					area.setAccessLevel({
-						accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS',
-					}).then(() => {
-						area.setAccessLevel({
-							accessLevel: 'TRUSTED_CONTEXTS',
-						}).then(() => {
-							done();
-						});
-					});
-				} else {
-					area.setAccessLevel({
-						accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS',
-					}, () => {
-						area.setAccessLevel({
-							accessLevel: 'TRUSTED_CONTEXTS',
-						}, () => {
-							done();
-						});
-					});
-				}
+		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_MINUTE is exceeded', () => {
+			const k = createStorageArea(null, {
+				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
+
+			expect(k.clear()).resolves.not.toThrow();
+			expect(k.clear()).resolves.not.toThrow();
+			expect(k.clear()).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_MINUTE/ui);
 		});
 
-		describe('.clear()', () => {
-			test('Removes all existing items', (done) => {
-				const k = createStorageArea(new Store([
-					['red', serialise(140)],
-					['blue', serialise(220)],
-					['green', serialise(790)],
-				]));
-
-				if (withPromise) {
-					k.getBytesInUse(null).then(bytesInUse => {
-						expect(bytesInUse).toBe(21);
-
-						k.clear().then(() => {
-							k.getBytesInUse(null).then(bytesInUse => {
-								expect(bytesInUse).toBe(0);
-								done();
-							});
-						});
-					});
-				} else {
-					k.getBytesInUse(null, bytesInUse => {
-						expect(bytesInUse).toBe(21);
-
-						k.clear(() => {
-							k.getBytesInUse(null, bytesInUse => {
-								expect(bytesInUse).toBe(0);
-								done();
-							});
-						});
-					});
-				}
+		test('Rejects MAX_WRITE_OPERATIONS_PER_HOUR before MAX_WRITE_OPERATIONS_PER_MINUTE', () => {
+			const k = createStorageArea(null, {
+				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
+				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
 
-			test.each([
-				{
-					message: 'Will reject with an error if MAX_WRITE_OPERATIONS_PER_HOUR is exceeded',
-					pattern: /quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui,
-					quota: {
-						MAX_WRITE_OPERATIONS_PER_HOUR: 2,
-					},
-				}, {
-					message: 'Will reject with an error if MAX_WRITE_OPERATIONS_PER_MINUTE is exceeded',
-					pattern: /quota exceeded.+MAX_WRITE_OPERATIONS_PER_MINUTE/ui,
-					quota: {
-						MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
-					},
-				}, {
-					message: 'Either rejects MAX_WRITE_OPERATIONS_PER_HOUR or MAX_WRITE_OPERATIONS_PER_MINUTE',
-					pattern: /quota exceeded.+(MAX_WRITE_OPERATIONS_PER_HOUR|MAX_WRITE_OPERATIONS_PER_MINUTE)/ui,
-					quota: {
-						MAX_WRITE_OPERATIONS_PER_HOUR: 2,
-						MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
-					},
-				},
-			])('$message', ({ quota, pattern }, done) => {
-				const k = createStorageArea(null, quota);
+			expect(k.clear()).resolves.not.toThrow();
+			expect(k.clear()).resolves.not.toThrow();
+			expect(k.clear()).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
+		});
 
-				if (withPromise) {
-					k.clear().then(() => {
-						k.clear().then(() => {
-							k.clear().then(() => {
-								throw new Error('This branch should not be reached');
-							}).catch(e => {
-								expect(e).toBeInstanceOf(Error);
-								expect(e.message).toMatch(pattern);
-								done();
-							});
-						});
-					});
-				} else {
-					k.clear(() => {
-						k.clear(() => {
-							k.clear(() => {
-								expect(chrome.runtime.lastError).toBeInstanceOf(Error);
-								expect(chrome.runtime.lastError?.message).toMatch(pattern);
-								done();
-							});
-						});
-					});
-				}
+		test('Failed operations due to an exceeded quota will not modify state', () => {
+			const k = createStorageArea(new Store([
+				['a', serialise('original')],
+			]), {
+				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 			});
 
-			test('Failed operations due to an exceeded quota will not modify state', (done) => {
-				const store = createStorageArea(new Store([
-					['a', 20],
-				]), {
-					MAX_WRITE_OPERATIONS_PER_HOUR: 2,
-				});
+			expect(k.set({ b: 123 })).resolves.not.toThrow();
+			expect(k.set({ c: 123 })).resolves.not.toThrow();
+			expect(k.clear()).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
 
-				if (withPromise) {
-					store.set({ b: 10 }).then(() => {
-						store.set({ c: 77 }).then(() => {
-							store.set({ d: 94 }).then(() => {
-								throw new Error('This branch should not be reached');
-							}).catch(e => {
-								expect(e).toBeInstanceOf(Error);
-								expect(e.message).toMatch(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
-
-								store.get(['a', 'b', 'c']).then(result => {
-									expect(result).toMatchObject({
-										a: 20,
-										b: 10,
-										c: 77,
-									});
-
-									done();
-								});
-							});
-						});
-					});
-				} else {
-					store.set({ b: 10 }, () => {
-						store.set({ c: 77 }, () => {
-							store.set({ d: 94 }, () => {
-								expect(chrome.runtime.lastError).toBeInstanceOf(Error);
-								expect(chrome.runtime.lastError?.message).toMatch(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
-
-								store.get(['a', 'b', 'c'], result => {
-									expect(result).toMatchObject({
-										a: 20,
-										b: 10,
-										c: 77,
-									});
-
-									done();
-								});
-							});
-						});
-					});
-				}
+			expect(k.get(['a', 'b', 'c'])).resolves.toMatchObject({
+				a: 'original',
+				b: 123,
+				c: 123,
 			});
 		});
 	});
@@ -630,6 +514,63 @@ describe('StorageAreaFactory()', () => {
 			expect(k.get('a')).resolves.toMatchObject({
 				a: 'original',
 			});
+		});
+	});
+});
+
+describe('createStorageArea()', () => {
+	describe('Callbacks', () => {
+
+		test('.get() is unsupported', () => {
+			const k = createStorageArea();
+
+			expect(() => {
+				k.get(() => {});
+			}).toThrow(/unsupported/i);
+		});
+
+		test('.remove() is unsupported', () => {
+			const k = createStorageArea();
+
+			expect(() => {
+				k.remove('a', () => {});
+			}).toThrow(/unsupported/i);
+		});
+
+		test('.set() is unsupported', () => {
+			const k = createStorageArea();
+
+			expect(() => {
+				k.set({
+					a: 12,
+				}, () => {});
+			}).toThrow(/unsupported/i);
+		});
+
+		test('.clear() is unsupported', () => {
+			const k = createStorageArea();
+
+			expect(() => {
+				k.clear(() => {});
+			}).toThrow(/unsupported/i);
+		});
+
+		test('.getBytesInUse() is unsupported', () => {
+			const k = createStorageArea();
+
+			expect(() => {
+				k.getBytesInUse(() => {});
+			}).toThrow(/unsupported/i);
+		});
+
+		test('.setAccessLevel() is unsupported', () => {
+			const k = createStorageArea();
+
+			expect(() => {
+				k.setAccessLevel({
+					accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS',
+				}, () => {});
+			}).toThrow(/unsupported/i);
 		});
 	});
 });
