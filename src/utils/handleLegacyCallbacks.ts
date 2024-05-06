@@ -10,10 +10,14 @@ export default function handleLegacyCallbacks(op: () => any, callback: ((...args
 	globalThis.chrome.runtime = globalThis.chrome.runtime || {};
 
 	try {
+		if (op instanceof Promise) {
+			throw new TypeError('handleLegacyCallbacks() does not support asynchronous functions. Argument 1 is a promise.');
+		}
+
 		const result = op();
 
 		if (result instanceof Promise) {
-			throw new Error('handleLegacyCallbacks() does not support asynchronous functions. Argument 1 returned a promise.');
+			throw new TypeError('handleLegacyCallbacks() does not support asynchronous functions. Argument 1 returned a promise.');
 		}
 
 		if (typeof callback === 'function') {

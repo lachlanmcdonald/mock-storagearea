@@ -40,6 +40,21 @@ describe('Using callbacks', () => {
 			done();
 		});
 	});
+
+	test('Throws if passed a promise', () => {
+		expect(() => {
+			// @ts-expect-error Argument is intentionally invalid
+			handleLegacyCallbacks(Promise.resolve(), () => {}); // eslint-disable-line no-empty-function
+		}).toThrow(new TypeError('handleLegacyCallbacks() does not support asynchronous functions. Argument 1 is a promise.'));
+	});
+
+	test('Throws if passed a function which returns a promise', () => {
+		expect(() => {
+			handleLegacyCallbacks(() => {
+				return Promise.resolve();
+			}, () => {}); // eslint-disable-line no-empty-function
+		}).toThrow(new TypeError('handleLegacyCallbacks() does not support asynchronous functions. Argument 1 returned a promise.'));
+	});
 });
 
 describe('Using promises', () => {
@@ -49,5 +64,20 @@ describe('Using promises', () => {
 
 	test('A synchronous function which throws', () => {
 		expect(handleLegacyCallbacks(UNSAFE_OP, null)).rejects.toThrow(new TypeError('Something went wrong.'));
+	});
+
+	test('Throws if passed a promise', () => {
+		expect(() => {
+			// @ts-expect-error Argument is intentionally invalid
+			handleLegacyCallbacks(Promise.resolve(), null);
+		}).toThrow(new TypeError('handleLegacyCallbacks() does not support asynchronous functions. Argument 1 is a promise.'));
+	});
+
+	test('Throws if passed a function which returns a promise', () => {
+		expect(() => {
+			handleLegacyCallbacks(() => {
+				return Promise.resolve();
+			}, null);
+		}).toThrow(new TypeError('handleLegacyCallbacks() does not support asynchronous functions. Argument 1 returned a promise.'));
 	});
 });
