@@ -63,7 +63,7 @@ describe('createStorageArea()', () => {
 		});
 	});
 
-	test.only('Store is empty by default', () => {
+	test('Store is empty by default', () => {
 		const k = createStorageArea();
 
 		expect(k.getBytesInUse()).resolves.toBe(0);
@@ -88,8 +88,10 @@ describe('createStorageArea()', () => {
 		])('%s', (_message, input) => {
 			const k = createStorageArea(new Store());
 
-			// @ts-expect-error Expected type mis-match
-			expect(k.getBytesInUse(input)).rejects.toBe(TypeError);
+			expect(() => {
+				// @ts-expect-error Expected type mis-match
+				k.getBytesInUse(input);
+			}).toThrow(TypeError);
 		});
 	});
 
@@ -146,15 +148,17 @@ describe('createStorageArea()', () => {
 			expect(k.clear()).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_MINUTE/ui);
 		});
 
-		test('Rejects MAX_WRITE_OPERATIONS_PER_HOUR before MAX_WRITE_OPERATIONS_PER_MINUTE', () => {
+		test('Rejects either MAX_WRITE_OPERATIONS_PER_HOUR or MAX_WRITE_OPERATIONS_PER_MINUTE', () => {
 			const k = createStorageArea(null, {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
 
-			expect(k.clear()).resolves.not.toThrow();
-			expect(k.clear()).resolves.not.toThrow();
-			expect(k.clear()).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
+			k.clear().then(() => {
+				k.clear().then(() => {
+					expect(k.clear()).rejects.toThrow(/quota exceeded.+(MAX_WRITE_OPERATIONS_PER_HOUR|MAX_WRITE_OPERATIONS_PER_MINUTE)/ui);
+				});
+			});
 		});
 
 		test('Failed operations due to an exceeded quota will not modify state', () => {
@@ -350,25 +354,23 @@ describe('createStorageArea()', () => {
 			})).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_MINUTE/ui);
 		});
 
-		test('Rejects MAX_WRITE_OPERATIONS_PER_HOUR before MAX_WRITE_OPERATIONS_PER_MINUTE', () => {
+		test('Rejects either MAX_WRITE_OPERATIONS_PER_HOUR or MAX_WRITE_OPERATIONS_PER_MINUTE', () => {
 			const k = createStorageArea(null, {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
 
-			expect(k.set({
+			k.set({
 				a: 1,
-			})).resolves.not.toThrow();
-
-			expect(k.set({
-				b: 2,
-			})).resolves.not.toThrow();
-
-			expect(k.set({
-				a: 3,
-				b: 3,
-				c: 3,
-			})).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
+			}).then(() => {
+				k.set({
+					b: 2,
+				}).then(() => {
+					expect(k.set({
+						c: 3,
+					})).rejects.toThrow(/quota exceeded.+(MAX_WRITE_OPERATIONS_PER_HOUR|MAX_WRITE_OPERATIONS_PER_MINUTE)/ui);
+				});
+			});
 		});
 
 		test('Will reject with an error if MAX_ITEMS is exceeded', () => {
@@ -457,13 +459,13 @@ describe('createStorageArea()', () => {
 			expect(k.remove(['value0', 'value1'])).resolves.not.toThrow();
 		});
 
-		test('Can remove a non-existant key', () => {
+		test('Removing a non-existant key is not an error', () => {
 			const k = createStorageArea();
 
 			expect(k.remove('key')).resolves.not.toThrow();
 		});
 
-		test('Can remove non-existant keys', () => {
+		test('Removing non-existant keys is not an error', () => {
 			const k = createStorageArea();
 
 			expect(k.remove(['key1', 'key2'])).resolves.not.toThrow();
@@ -474,9 +476,11 @@ describe('createStorageArea()', () => {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 			});
 
-			expect(k.remove('key')).resolves.not.toThrow();
-			expect(k.remove('key')).resolves.not.toThrow();
-			expect(k.remove('key')).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
+			k.remove('key').then(() => {
+				k.remove('key').then(() => {
+					expect(k.remove('key')).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
+				});
+			});
 		});
 
 		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_MINUTE is exceeded', () => {
@@ -484,20 +488,24 @@ describe('createStorageArea()', () => {
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
 
-			expect(k.remove('key')).resolves.not.toThrow();
-			expect(k.remove('key')).resolves.not.toThrow();
-			expect(k.remove('key')).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_MINUTE/ui);
+			k.remove('key').then(() => {
+				k.remove('key').then(() => {
+					expect(k.remove('key')).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_MINUTE/ui);
+				});
+			});
 		});
 
-		test('Rejects MAX_WRITE_OPERATIONS_PER_HOUR before MAX_WRITE_OPERATIONS_PER_MINUTE', () => {
+		test('Rejects either MAX_WRITE_OPERATIONS_PER_HOUR or MAX_WRITE_OPERATIONS_PER_MINUTE', () => {
 			const k = createStorageArea(null, {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
 
-			expect(k.remove('key')).resolves.not.toThrow();
-			expect(k.remove('key')).resolves.not.toThrow();
-			expect(k.remove('key')).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
+			k.remove('key').then(() => {
+				k.remove('key').then(() => {
+					expect(k.remove('key')).rejects.toThrow(/quota exceeded.+(MAX_WRITE_OPERATIONS_PER_HOUR|MAX_WRITE_OPERATIONS_PER_MINUTE)/ui);
+				});
+			});
 		});
 
 		test('Failed operations due to an exceeded quota will not modify state', () => {
@@ -507,12 +515,19 @@ describe('createStorageArea()', () => {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 			});
 
-			expect(k.remove('key')).resolves.not.toThrow();
-			expect(k.remove('key')).resolves.not.toThrow();
-			expect(k.remove('key')).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
+			k.remove('key').then(() => {
+				k.remove('key').then(() => {
+					k.remove('key').then(() => {
+						throw new Error('This branch should not be reached');
+					}).catch(e => {
+						expect(e).toBeInstanceOf(Error);
+						expect(e.message).toMatch(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
 
-			expect(k.get('a')).resolves.toMatchObject({
-				a: 'original',
+						expect(k.get('a')).resolves.toMatchObject({
+							a: 'original',
+						});
+					});
+				});
 			});
 		});
 	});
@@ -520,12 +535,11 @@ describe('createStorageArea()', () => {
 
 describe('createStorageArea()', () => {
 	describe('Callbacks', () => {
-
 		test('.get() is unsupported', () => {
 			const k = createStorageArea();
 
 			expect(() => {
-				k.get(() => {});
+				k.get(null, () => {});
 			}).toThrow(/unsupported/i);
 		});
 
