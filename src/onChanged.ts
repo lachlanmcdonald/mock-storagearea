@@ -7,7 +7,7 @@ import OnChangedEvent from './OnChangedEvent';
 
 /**
  * The __onChanged__ factory binds callbacks to the `onChanged` event on each
- * of the provide _Storage Areas_ and passes through the `areaName` argument
+ * of the provide Storage Areas and passes through the `areaName` argument
  * to the callback.
  */
 export default function onChanged(areas: Record<string, chrome.storage.StorageArea>) {

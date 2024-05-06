@@ -3,7 +3,7 @@
  * This file is licensed under the MIT License
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
-import updateWriteQuota from './incrementWriteQuota';
+import updateWriteQuota from './updateWriteQuota';
 
 const TIMESTAMP = new Date(Date.UTC(2023, 0, 1, 12, 0, 0)).valueOf();
 

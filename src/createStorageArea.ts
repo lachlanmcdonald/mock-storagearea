@@ -10,7 +10,7 @@ import Store from './Store';
 import { Changes, Quota } from './Types';
 import deepMergeObjects from './utils/deepMergeObjects';
 import handleLegacyCallbacks from './utils/handleLegacyCallbacks';
-import updateWriteQuota from './utils/incrementWriteQuota';
+import updateWriteQuota from './utils/updateWriteQuota';
 
 type GetParameterKeys = string | string[] | Record<string, any> | null;
 type GetParameterCallback = (items: Record<string, any>) => void;

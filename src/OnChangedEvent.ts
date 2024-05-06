@@ -65,7 +65,7 @@ export default function OnChangedEvent<H extends StorageChangeCallback>() {
 
 	/**
 	 * Dispatches a new event which indicates a change has occurred within
-	 * a _Storage Area_.
+	 * a Storage Area.
 	 */
 	function dispatch(changes: Record<string, chrome.storage.StorageChange>, areaName?: string) {
 		const e = new Event(EVENT_NAME);
