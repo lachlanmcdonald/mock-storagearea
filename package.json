@@ -17,6 +17,11 @@
 	"bugs": {
 		"url": "https://github.com/lachlanmcdonald/mock-storagearea/issues"
 	},
+	"files": [
+		"LICENSE",
+		"README.md",
+		"dist"
+	],
 	"homepage": "https://github.com/lachlanmcdonald/mock-storagearea",
 	"repository": {
 		"type": "git",

@@ -44,19 +44,19 @@ const chrome = {
 
 ## Listening for changes
 
-> See: [Listening to changes](https://github.com/lachlanmcdonald/mock-storagearea/wiki/Listening-to-changes)
+See: [Listening to changes](https://github.com/lachlanmcdonald/mock-storagearea/wiki/Listening-to-changes)
 
 ## Quotas
 
 Normally, quotas are defined by the browser and not configurable by the extension. However, for testing purposes, the quota constraints can be overwritten during initialisation.
 
-> See: [Adjusting quotas](https://github.com/lachlanmcdonald/mock-storagearea/wiki/Adjusting-quotas)
+See: [Adjusting quotas](https://github.com/lachlanmcdonald/mock-storagearea/wiki/Adjusting-quotas)
 
 ### Serialisation
 
-> It is best practice to not rely on Chrome's serialisation behaviour and instead serialise/deserialise your values into strings before storage.
+> It is best practice to not rely on Chrome's serialisation behaviour and instead serialise/deserialise your values into strings before storage. However, this package attempt's to implement identical serialisation/deserialisation techniques as Chrome.
 
-> See: [Serialisation & deserialisation](https://github.com/lachlanmcdonald/mock-storagearea/wiki/Serialisation-&-deserialisation) and [storage size](https://github.com/lachlanmcdonald/mock-storagearea/wiki/Storage-size)
+See: [Serialisation & deserialisation](https://github.com/lachlanmcdonald/mock-storagearea/wiki/Serialisation-&-deserialisation) and [storage size](https://github.com/lachlanmcdonald/mock-storagearea/wiki/Storage-size)
 
 ## Tests
 
