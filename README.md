@@ -2,13 +2,7 @@
 
 [![Build](https://github.com/lachlanmcdonald/mock-storagearea/actions/workflows/build.yml/badge.svg?branch=main)][build-link] [![npm version](https://badge.fury.io/js/%40lachlanmcdonald%2Fmock-storagearea.svg)][package-link] [![License](https://img.shields.io/badge/License-MIT-blue.svg)][license-link] 
 
-__mock-storagearea__ is a implementation of Chrome's [extension storage interface](https://developer.chrome.com/docs/extensions/reference/storage/), i.e. `chrome.storage`. This package is primarily intended for use in development and testing of extensions outside of a browser.
-
-__Notes:__ 
-
-- [Manifest V3 introduced support for promises](https://developer.chrome.com/docs/extensions/mv3/promises/), where as versions prior used a callback argument. This implementation <u>is not</u>  backwards-compatible with callbacks and only supports promises. Providing a callback will throw an exception.
-- The `chrome.storage` documentation is often vague. Whilst attempts have been made to identify and replicate any undocumented behaviour, some discrepancies may exist across versions and browsers. Whilst behaviour was validated on the Chrome browser, this library should also function similarly with browsers which implement the [Chromium-based extension API](https://developer.chrome.com/docs/extensions/reference/).
-- Due to the usage of `structuredClone`, this package only supports Node 18+.
+__mock-storagearea__ is a implementation of Chrome's [extension storage interface](https://developer.chrome.com/docs/extensions/reference/storage/), i.e. `chrome.storage`. This package is intended for use in development and testing of extensions outside of a browser.
 
 ## Usage
 
@@ -58,11 +52,17 @@ See: [Adjusting quotas](https://github.com/lachlanmcdonald/mock-storagearea/wiki
 
 See: [Serialisation & deserialisation](https://github.com/lachlanmcdonald/mock-storagearea/wiki/Serialisation-&-deserialisation) and [storage size](https://github.com/lachlanmcdonald/mock-storagearea/wiki/Storage-size)
 
+## Notes
+
+- [Manifest V3 introduced support for promises](https://developer.chrome.com/docs/extensions/mv3/promises/), where as versions prior used a callback argument. This implementation is not backwards-compatible with callbacks and only supports promises. Providing a callback will throw an exception.
+- Whilst attempts have been made to identify and replicate any undocumented behaviour in the `chrome.storage` documentation, some discrepancies may exist across versions and browsers. This package is intended to work with any browser which implements the [Chromium-based extension API](https://developer.chrome.com/docs/extensions/reference/).
+- Due to the usage of `structuredClone`, this package only supports Node 18+.
+
 ## Tests
 
 ```shell
-npm run build
-npm run test
+pnpm run build
+pnpm run test
 ```
 
 [build-link]: https://github.com/lachlanmcdonald/mock-storagearea/actions

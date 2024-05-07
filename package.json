@@ -1,10 +1,10 @@
 {
-	"name": "@lachlanmcdonald/mock-storagearea",
+	"name": "@lmcd/mock-storagearea",
 	"version": "0.1.0",
 	"scripts": {
 		"test": "jest",
 		"dev": "tsc --watch",
-		"build": "tsc",
+		"build": "tsc --build",
 		"lint": "eslint . --ext .ts"
 	},
 	"engines": {
