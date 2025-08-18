@@ -80,6 +80,10 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 	 */
 	const writeOperationsPerMinute = {} as Record<string, number>;
 
+	function getKeys() {
+		return this.store.keys();
+	}
+
 	function get(callback: GetParameterCallback) : void;
 	function get(keys?: GetParameterKeys) : Promise<Record<string, any>>;
 	function get(keys: GetParameterKeys, callback: GetParameterCallback) : void;
@@ -330,12 +334,17 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 	const obj = {
 		clear,
 		getBytesInUse,
+		getKeys,
 		get,
 		remove,
 		set,
 		setAccessLevel,
 		onChanged,
-	} as chrome.storage.StorageArea & Q;
+	} as chrome.storage.StorageArea & Q & {
+		// @types/chrome is missing getKeys():
+		// https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/73500
+		getKeys: () => string[]
+	};
 
 	for (const key in mergedQuotas) {
 		if (Object.hasOwn(mergedQuotas, key)) {
