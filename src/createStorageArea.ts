@@ -15,12 +15,6 @@ import updateWriteQuota from './utils/updateWriteQuota';
 type GetParameterKeys = string | string[] | Record<string, any> | null;
 type GetParameterCallback = (items: Record<string, any>) => void;
 
-// @types/chrome is missing getKeys():
-// https://github.com/DefinitelyTyped/DefinitelyTyped/discussions/73500
-type StorageAreaFix ={
-	getKeys: () => Promise<string[]>
-}
-
 const dispatchEvent = (dispatcher: (changes: Record<string, chrome.storage.StorageChange>) => void, changes: Changes) => {
 	const temp = {} as Record<string, {
 		oldValue: any;
@@ -52,7 +46,7 @@ export const inspect = (storageArea: chrome.storage.StorageArea) => {
 	return STORAGE_AREA_MAP.has(storageArea) ? STORAGE_AREA_MAP.get(storageArea) : null;
 };
 
-export default function createStorageArea<Q extends Partial<Quota>>(initialStore?: Store | null, quotas?: Q) : chrome.storage.StorageArea & Q & StorageAreaFix {
+export default function createStorageArea<Q extends Partial<Quota>>(initialStore?: Store | null, quotas?: Q) : chrome.storage.StorageArea & Q {
 	/**
 	 * Internal quota limits.
 	 */
@@ -346,7 +340,7 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 		set,
 		setAccessLevel,
 		onChanged,
-	} as chrome.storage.StorageArea & Q & StorageAreaFix;
+	} as chrome.storage.StorageArea & Q;
 
 	for (const key in mergedQuotas) {
 		if (Object.hasOwn(mergedQuotas, key)) {
