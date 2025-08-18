@@ -115,6 +115,51 @@ describe('createStorageArea()', () => {
 		});
 	});
 
+	describe('.getKeys()', () => {
+		test('Returns existing keys', () => {
+			const k = createStorageArea(new Store([
+				['red', serialise(140)],
+				['blue', serialise(220)],
+				['green', serialise(790)],
+			]));
+
+			expect(k.getKeys()).resolves.toHaveLength(3);
+			expect(k.getKeys()).resolves.toContain('red');
+			expect(k.getKeys()).resolves.toContain('blue');
+			expect(k.getKeys()).resolves.toContain('green');
+		});
+
+		test('Returns an empty array on empty storage', () => {
+			const k = createStorageArea();
+
+			expect(k.getKeys()).resolves.toHaveLength(0);
+		});
+
+		test('Returns set items', () => {
+			const k = createStorageArea();
+
+			expect(k.set({ red: 123 })).resolves.not.toThrow();
+			expect(k.set({ blue: 123 })).resolves.not.toThrow();
+
+			expect(k.getKeys()).resolves.toHaveLength(2);
+			expect(k.getKeys()).resolves.toContain('red');
+			expect(k.getKeys()).resolves.toContain('blue');
+		});
+
+
+		test('Does not return removed items', () => {
+			const k = createStorageArea();
+
+			expect(k.set({ red: 123 })).resolves.not.toThrow();
+			expect(k.set({ blue: 123 })).resolves.not.toThrow();
+
+			expect(k.remove('red')).resolves.not.toThrow();
+
+			expect(k.getKeys()).resolves.toHaveLength(1);
+			expect(k.getKeys()).resolves.toContain('blue');
+		});
+	});
+
 	describe('.clear()', () => {
 		test('Removes all existing items', () => {
 			const k = createStorageArea(new Store([
