@@ -80,7 +80,7 @@ describe('serialise() and deserialise()', () => {
 		])('%s', (_name, input) => {
 			expect(() => {
 				serialise(input);
-			}).toThrowError(TypeError);
+			}).toThrow(TypeError);
 		});
 	});
 
