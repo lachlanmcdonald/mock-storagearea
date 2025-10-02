@@ -3,8 +3,8 @@
  * This file is licensed under the MIT License
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
-import { serialise } from './serialiser';
 import { deserialise } from './deserialise';
+import { serialise } from './serialiser';
 
 const UNCHANGED_PRIMITIVES = [
 	['Empty String', ''],

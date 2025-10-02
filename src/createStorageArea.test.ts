@@ -5,12 +5,12 @@
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
 import { CHROME_LOCAL_STORAGE_DEFAULT_QUOTA, CHROME_SESSION_STORAGE_DEFAULT_QUOTA, CHROME_SYNC_STORAGE_DEFAULT_QUOTA, UNLIMITED_QUOTA } from './Constants';
-import { createManagedStorageArea, createSessionStorageArea, createLocalStorageArea, createSyncStorageArea } from './StorageAreas';
+import createStorageArea from './createStorageArea';
+import { createLocalStorageArea, createManagedStorageArea, createSessionStorageArea, createSyncStorageArea } from './StorageAreas';
 import Store from './Store';
 import { Quota } from './Types';
-import { serialise, SerialiseFunction } from './utils/serialiser';
 import { DeserialiseFunction } from './utils/deserialise';
-import createStorageArea from './createStorageArea';
+import { serialise, SerialiseFunction } from './utils/serialiser';
 
 const SAMPLE = [
 	['value0', serialise(8546)],

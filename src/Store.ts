@@ -5,8 +5,8 @@
  */
 import { PropertyChanges } from './Types';
 import StoreChangeFactory from './utils/StoreChangeFactory';
-import { serialise, SerialiseFunction } from './utils/serialiser';
 import { deserialise, DeserialiseFunction } from './utils/deserialise';
+import { serialise, SerialiseFunction } from './utils/serialiser';
 
 /**
  * A __Store__ represents the underlying data structure of a {@link StorageArea}.
