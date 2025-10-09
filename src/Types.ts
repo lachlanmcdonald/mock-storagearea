@@ -3,7 +3,6 @@
  * This file is licensed under the MIT License
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
-
 import Store from './Store';
 
 export interface Quota {

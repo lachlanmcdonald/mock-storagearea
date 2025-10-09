@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2024 Lachlan McDonald. All rights reserved.
+ * This file is licensed under the MIT License
+ * https://github.com/lachlanmcdonald/mock-storagearea
+ */
 import { CHROME_LOCAL_STORAGE_DEFAULT_QUOTA, CHROME_SESSION_STORAGE_DEFAULT_QUOTA, CHROME_SYNC_STORAGE_DEFAULT_QUOTA } from './Constants';
 import Store from './Store';
 import createStorageArea from './createStorageArea';
