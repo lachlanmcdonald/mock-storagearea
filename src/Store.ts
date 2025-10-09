@@ -80,7 +80,7 @@ export default class Store {
 	}
 
 	/**
-	 * Removes an item or items from the store. Removing non-existant items
+	 * Removes an item or items from the store. Removing non-existent items
 	 * has no effect.
 	 */
 	delete(keys: string | string[]) {

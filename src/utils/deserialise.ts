@@ -8,7 +8,6 @@
  * Deserialises a value previously serialised with {@link serialise()}, that is, a
  * value which was serialised in accordance with the observed serialisation rules in Chrome.
  */
-
 export const deserialise = (value: string) => {
 	return JSON.parse(value);
 };

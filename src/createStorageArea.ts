@@ -1,9 +1,9 @@
+/* eslint-disable func-style */
 /*
  * Copyright (c) 2024 Lachlan McDonald. All rights reserved.
  * This file is licensed under the MIT License
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
-/* eslint-disable func-style */
 import { UNLIMITED_QUOTA } from './Constants';
 import OnChangedEvent from './OnChangedEvent';
 import Store from './Store';
