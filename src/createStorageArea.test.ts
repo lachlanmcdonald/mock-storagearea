@@ -194,24 +194,22 @@ describe('createStorageArea()', () => {
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
 
-			k.clear().then(() => {
-				k.clear().then(() => {
-					expect(k.clear()).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_MINUTE/ui);
-				});
-			});
+			await k.clear();
+			await k.clear();
+
+			expect(k.clear()).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_MINUTE/ui);
 		});
 
-		test('Rejects either MAX_WRITE_OPERATIONS_PER_HOUR or MAX_WRITE_OPERATIONS_PER_MINUTE', () => {
+		test('Rejects either MAX_WRITE_OPERATIONS_PER_HOUR or MAX_WRITE_OPERATIONS_PER_MINUTE', async () => {
 			const k = createStorageArea(null, {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
 
-			k.clear().then(() => {
-				k.clear().then(() => {
-					expect(k.clear()).rejects.toThrow(/quota exceeded.+(MAX_WRITE_OPERATIONS_PER_HOUR|MAX_WRITE_OPERATIONS_PER_MINUTE)/ui);
-				});
-			});
+			await k.clear();
+			await k.clear();
+
+			expect(k.clear()).rejects.toThrow(/quota exceeded.+(MAX_WRITE_OPERATIONS_PER_HOUR|MAX_WRITE_OPERATIONS_PER_MINUTE)/ui);
 		});
 
 		test('Failed operations due to an exceeded quota will not modify state', async () => {
@@ -513,13 +511,13 @@ describe('createStorageArea()', () => {
 			expect(k.remove(['value0', 'value1'])).resolves.not.toThrow();
 		});
 
-		test('Removing a non-existant key is not an error', () => {
+		test('Removing a non-existent key is not an error', () => {
 			const k = createStorageArea();
 
 			expect(k.remove('key')).resolves.not.toThrow();
 		});
 
-		test('Removing non-existant keys is not an error', () => {
+		test('Removing non-existent keys is not an error', () => {
 			const k = createStorageArea();
 
 			expect(k.remove(['key1', 'key2'])).resolves.not.toThrow();
