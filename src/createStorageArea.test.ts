@@ -6,11 +6,10 @@
  */
 import { CHROME_LOCAL_STORAGE_DEFAULT_QUOTA, CHROME_SESSION_STORAGE_DEFAULT_QUOTA, CHROME_SYNC_STORAGE_DEFAULT_QUOTA, UNLIMITED_QUOTA } from './Constants';
 import createStorageArea from './createStorageArea';
+import MapStore from './MapStore';
 import { createLocalStorageArea, createManagedStorageArea, createSessionStorageArea, createSyncStorageArea } from './StorageAreas';
-import Store from './Store';
-import { Quota } from './Types';
-import { DeserialiseFunction } from './utils/deserialise';
-import { serialise, SerialiseFunction } from './utils/serialiser';
+import { DeserialiseFunction, Quota, SerialiseFunction } from './Types';
+import { serialise } from './utils/serialiser';
 
 const SAMPLE = [
 	['value0', serialise(8546)],
@@ -21,7 +20,7 @@ const SAMPLE = [
 
 describe('createStorageArea()', () => {
 	test('Store can be initialised with an existing payload', () => {
-		createStorageArea(new Store([
+		createStorageArea(new MapStore([
 			['value0', serialise(1234)],
 			['value1', serialise(1234)],
 			['value2', serialise(1234)],
@@ -48,7 +47,7 @@ describe('createStorageArea()', () => {
 			return JSON.parse(value.slice(1, -1));
 		};
 
-		const k = createStorageArea(new Store([
+		const k = createStorageArea(new MapStore([
 			['contrast', newSerialiser(15)],
 			['primitive', newSerialiser(99)],
 			['travel', newSerialiser(13)],
@@ -77,7 +76,7 @@ describe('createStorageArea()', () => {
 			['Returns the correct size when storage contains values', SAMPLE, null, 40],
 			['Returns zero when keys are an empty array', SAMPLE, [], 0],
 		])('%s', (_message, initialStore, input, expected) => {
-			const k = createStorageArea(new Store(initialStore));
+			const k = createStorageArea(new MapStore(initialStore));
 
 			expect(k.getBytesInUse(input)).resolves.toBe(expected);
 		});
@@ -86,7 +85,7 @@ describe('createStorageArea()', () => {
 			['Fails when first argument is an array with non-string key', [123]],
 			['Fails when first argument is not a string', true],
 		])('%s', (_message, input) => {
-			const k = createStorageArea(new Store());
+			const k = createStorageArea(new MapStore());
 
 			expect(() => {
 				// @ts-expect-error Expected type mis-match
@@ -96,7 +95,7 @@ describe('createStorageArea()', () => {
 	});
 
 	test('Returns a promise of the total size when arguments are not provided', () => {
-		const k = createStorageArea(new Store(SAMPLE));
+		const k = createStorageArea(new MapStore(SAMPLE));
 
 		expect(k.getBytesInUse()).resolves.toBe(40);
 	});
@@ -117,7 +116,7 @@ describe('createStorageArea()', () => {
 
 	describe('.getKeys()', () => {
 		test('Returns existing keys', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['red', serialise(140)],
 				['blue', serialise(220)],
 				['green', serialise(790)],
@@ -162,7 +161,7 @@ describe('createStorageArea()', () => {
 
 	describe('.clear()', () => {
 		test('Removes all existing items', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['red', serialise(140)],
 				['blue', serialise(220)],
 				['green', serialise(790)],
@@ -207,7 +206,7 @@ describe('createStorageArea()', () => {
 		});
 
 		test('Failed operations due to an exceeded quota will not modify state', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['a', serialise('original')],
 			]), {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
@@ -227,7 +226,7 @@ describe('createStorageArea()', () => {
 
 	describe('.get()', () => {
 		test('Returns a value when it exists', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['test', serialise(123)],
 			]));
 
@@ -237,7 +236,7 @@ describe('createStorageArea()', () => {
 		});
 
 		test('Only returns keys which exist', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['test', serialise(123)],
 			]));
 
@@ -247,7 +246,7 @@ describe('createStorageArea()', () => {
 		});
 
 		test('Returns default values for missing keys', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['test', serialise(123)],
 			]));
 
@@ -263,7 +262,7 @@ describe('createStorageArea()', () => {
 		});
 
 		test('Returns all keys if null is provided', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['a', serialise(123)],
 				['b', serialise(123)],
 				['c', serialise(123)],
@@ -322,7 +321,7 @@ describe('createStorageArea()', () => {
 		 *    }
 		 */
 		test('Returns full objects when a default is provided on a nested object', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['a', serialise({
 					b: 123,
 					c: { d: 123 },
@@ -463,7 +462,7 @@ describe('createStorageArea()', () => {
 		});
 
 		test('Failed operations due to an exceeded quota will not modify state', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['a', serialise('original')],
 			]), {
 				QUOTA_BYTES_PER_ITEM: 32,
@@ -483,7 +482,7 @@ describe('createStorageArea()', () => {
 
 	describe('.remove()', () => {
 		test('Can remove a key', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['value0', serialise(1234)],
 				['value1', serialise(1234)],
 				['value2', serialise(1234)],
@@ -494,7 +493,7 @@ describe('createStorageArea()', () => {
 		});
 
 		test('Can remove keys', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['value0', serialise(1234)],
 				['value1', serialise(1234)],
 				['value2', serialise(1234)],
@@ -554,7 +553,7 @@ describe('createStorageArea()', () => {
 		});
 
 		test('Failed operations due to an exceeded quota will not modify state', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['a', serialise('original')],
 			]), {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,

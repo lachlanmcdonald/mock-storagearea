@@ -3,10 +3,9 @@
  * This file is licensed under the MIT License
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
-import { PropertyChanges } from './Types';
-import StoreChangeFactory from './utils/StoreChangeFactory';
-import { deserialise, DeserialiseFunction } from './utils/deserialise';
-import { serialise, SerialiseFunction } from './utils/serialiser';
+import { DeserialiseFunction, InternalStore, SerialiseFunction, StoreChange } from './Types';
+import { deserialise } from './utils/deserialise';
+import { serialise } from './utils/serialiser';
 
 /**
  * A __Store__ represents the underlying data structure of a {@link StorageArea}.
@@ -17,7 +16,7 @@ import { serialise, SerialiseFunction } from './utils/serialiser';
  * - Values in the __Store__ are serialised using using {@link serialise}, and as such,
  *   some values may throw an exception or be ignored.
  */
-export default class Store {
+export default class MapStore implements InternalStore {
 	serialiser: SerialiseFunction;
 	deserialiser: DeserialiseFunction;
 	data: Map<string, string>;
@@ -34,25 +33,18 @@ export default class Store {
 	}
 
 	/**
-	 * Initialises a new instance of Store with the same store.
-	 */
-	clone() {
-		return new Store(this.data.entries(), this.serialiser, this.deserialiser);
-	}
-
-	/**
 	 * Returns whether the store contains the provided key.
 	 */
 	has(key: string) {
-		return this.data.has(key);
+		return Promise.resolve(this.data.has(key));
 	}
 
 	/**
 	 * Retrieves the value for the provided key from the store. Will throw
 	 * a __RangeError__ if the key does not exist within the store.
 	 */
-	get(key: string) {
-		if (this.has(key)) {
+	async get(key: string) {
+		if (await this.has(key)) {
 			return this.deserialiser(this.data.get(key) as string);
 		} else {
 			throw new RangeError(`key does not exist in store: ${ key }`);
@@ -63,108 +55,83 @@ export default class Store {
 	 * Sets values within the store. The payload should be an object of key/value pairs, where
 	 * the value is deserialised (as it will be serialised during import.)
 	 */
-	set(payload: Record<string, any>) {
-		const mutatedStore = this.clone();
+	async set(payload: Record<string, any>) {
+		const changes: Array<StoreChange> = [];
 
 		for (const key in payload) {
 			if (Object.hasOwn(payload, key)) {
 				const serialisedValue = this.serialiser(payload[key]);
 
 				if (typeof serialisedValue === 'string') {
-					mutatedStore.data.set(key, serialisedValue);
+					const existBefore = this.data.has(key);
+
+					changes.push({
+						key,
+						before: {
+							exists: existBefore,
+							value: existBefore ? this.deserialiser(this.data.get(key) as string) : null,
+						},
+						after: {
+							exists: true,
+							value: payload[key],
+						}
+					});
+
+					this.data.set(key, serialisedValue);
 				}
 			}
 		}
 
-		return StoreChangeFactory(this, mutatedStore);
+		return changes;
 	}
 
 	/**
-	 * Removes an item or items from the store. Removing non-existent items
-	 * has no effect.
+	 * Removes an item or items from the store.
 	 */
-	delete(keys: string | string[]) {
+	async delete(keys: string | string[]) {
 		if (typeof keys === 'string') {
 			keys = [keys];
 		}
 
-		const mutatedStore = this.clone();
+		const changes: Array<StoreChange> = [];
 
 		keys.forEach(key => {
-			mutatedStore.data.delete(key);
+			const existBefore = this.data.has(key);
+
+			changes.push({
+				key,
+				before: {
+					exists: existBefore,
+					value: existBefore ? this.deserialiser(this.data.get(key) as string) : null,
+				},
+				after: {
+					exists: false,
+					value: null,
+				}
+			});
+
+			this.data.delete(key);
 		});
 
-		return StoreChangeFactory(this, mutatedStore);
+		return changes;
 	}
 
 	/**
 	 * Removes all items from the store.
 	 */
-	clear() {
-		const mutatedStore = this.clone();
-
-		mutatedStore.data = new Map();
-
-		return StoreChangeFactory(this, mutatedStore);
-	}
-
-	/**
-	 * Compares the __Store__ instance with another __Store__, returning
-	 * a set of changes which indicate whether properties were added, delete, or updated.
-	 */
-	compare(input: Store) {
-		const results = {} as PropertyChanges;
-
-		const keys = [
-			...this.keys(),
-			...input.keys(),
-		];
-
-		for (const key of keys) {
-			const existsBefore = this.has(key);
-			const existsAfter = input.has(key);
-			let hasChanged = true;
-			let valueBefore = null;
-			let valueAfter = null;
-
-			if (existsBefore) {
-				valueBefore = this.get(key);
-			}
-
-			if (existsAfter) {
-				valueAfter = input.get(key);
-			}
-
-			if (existsBefore && existsAfter) {
-				hasChanged = valueBefore !== valueAfter;
-			}
-
-			if (hasChanged) {
-				results[key] = {
-					before: {
-						exists: existsBefore,
-						value: existsBefore ? valueBefore : null,
-					},
-					after: {
-						exists: existsAfter,
-						value: existsAfter ? valueAfter : null,
-					},
-				};
-			}
-		}
-
-		return results;
+	async clear() {
+		return this.delete(Array.from(this.data.keys()));
 	}
 
 	/**
 	 * Returns the size of each property in the store in bytes. The size is calculated as the
-	 * string length of the key plus the string length of the serialised value
-	 * for every item in the store.
+	 * string length of the key plus the string length of the serialised value for every item
+	 * in the store.
 	 */
-	get sizeInBytes() {
+	async sizeInBytes() {
 		const result = {} as Record<string, number>;
 
-		for (const key of this.keys()) {
+		for (const key of this.data.keys()) {
 			const value = this.data.get(key);
 
 			if (typeof value === 'string') {
@@ -172,7 +139,7 @@ export default class Store {
 			}
 		}
 
-		return result;
+		return Promise.resolve(result);
 	}
 
 	/**
@@ -180,23 +147,25 @@ export default class Store {
 	 * string length of the key plus the string length of the serialised value
 	 * for every item in the store.
 	 */
-	get totalBytes() {
-		return Object.values(this.sizeInBytes).reduce((k, v) => k + v, 0);
+	async totalBytes() {
+		return Promise.resolve(Object.values(await this.sizeInBytes()).reduce((k, v) => {
+			return k + v;
+		}, 0));
 	}
 
-	get count() {
-		return this.data.size;
+	count() {
+		return Promise.resolve(this.data.size);
 	}
 
 	keys() {
-		return this.data.keys();
+		return Promise.resolve(Array.from(this.data.keys()));
 	}
 
 	values() {
-		return this.data.values();
+		return Promise.resolve(Array.from(this.data.values()));
 	}
 
 	entries() {
-		return this.data.entries();
+		return Promise.resolve(Array.from(this.data.entries()));
 	}
 }

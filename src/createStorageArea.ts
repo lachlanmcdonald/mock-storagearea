@@ -5,9 +5,9 @@
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
 import { UNLIMITED_QUOTA } from './Constants';
+import MapStore from './MapStore';
 import OnChangedEvent from './OnChangedEvent';
-import Store from './Store';
-import { Changes, Quota } from './Types';
+import { InternalStore, Quota, StoreChange } from './Types';
 import deepMergeObjects from './utils/deepMergeObjects';
 import handleLegacyCallbacks from './utils/handleLegacyCallbacks';
 import updateWriteQuota from './utils/updateWriteQuota';
@@ -15,21 +15,17 @@ import updateWriteQuota from './utils/updateWriteQuota';
 type GetParameterKeys = string | string[] | Record<string, any> | null;
 type GetParameterCallback = (items: Record<string, any>) => void;
 
-const dispatchEvent = (dispatcher: (changes: Record<string, chrome.storage.StorageChange>) => void, changes: Changes) => {
+const dispatchEvent = (dispatcher: (changes: Record<string, chrome.storage.StorageChange>) => void, changes: StoreChange[]) => {
 	const temp = {} as Record<string, {
 		oldValue: any;
 		newValue: any;
 	}>;
 
-	for (const key in changes.changes) {
-		if (Object.hasOwn(changes.changes, key)) {
-			const k = changes.changes[key];
-
-			temp[key] = {
-				oldValue: k.before.exists ? k.before.value : undefined, // eslint-disable-line no-undefined
-				newValue: k.after.exists ? k.after.value : undefined, // eslint-disable-line no-undefined
-			};
-		}
+	for (const k of changes) {
+		temp[k.key] = {
+			oldValue: k.before.exists ? k.before.value : undefined, // eslint-disable-line no-undefined
+			newValue: k.after.exists ? k.after.value : undefined, // eslint-disable-line no-undefined
+		};
 	}
 
 	dispatcher(temp);
@@ -39,26 +35,26 @@ const STORAGE_AREA_MAP : WeakMap<chrome.storage.StorageArea, {
 	writeOperationsPerHour: Record<string, number>,
 	writeOperationsPerMinute: Record<string, number>,
 	quota: Quota,
-	store: Store,
+	store: InternalStore,
 }> = new WeakMap();
 
 export const inspect = (storageArea: chrome.storage.StorageArea) => {
 	return STORAGE_AREA_MAP.has(storageArea) ? STORAGE_AREA_MAP.get(storageArea) : null;
 };
 
-export default function createStorageArea<Q extends Partial<Quota>>(initialStore?: Store | null, quotas?: Q) : chrome.storage.StorageArea & Q {
+export default function createStorageArea<Q extends Partial<Quota>>(initialStore?: InternalStore | null, quotas?: Q) : chrome.storage.StorageArea & Q {
 	/**
 	 * Internal quota limits.
 	 */
 	const mergedQuotas: Quota = {
 		...UNLIMITED_QUOTA,
-		...quotas || {},
+		...(quotas || {}),
 	};
 
 	/**
 	 * Internal store.
 	 */
-	const store = initialStore ? initialStore : new Store();
+	const store = initialStore ? initialStore : new MapStore();
 
 	/**
 	 * Event handlers
@@ -80,20 +76,20 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 	 */
 	const writeOperationsPerMinute = {} as Record<string, number>;
 
-	function getKeys() {
-		return Promise.resolve(Array.from(store.keys()));
+	async function getKeys() {
+		return Array.from(await store.keys());
 	}
 
 	function get(callback: GetParameterCallback) : void;
 	function get(keys?: GetParameterKeys) : Promise<Record<string, any>>;
 	function get(keys: GetParameterKeys, callback: GetParameterCallback) : void;
 	function get(keysOrCallback?: GetParameterKeys | GetParameterCallback, optCallback?: GetParameterCallback) : void | Promise<Record<string, any>> {
-		let keys : Record<string, any> | null;
+		let keyArrayOrObject : Record<string, any> | null;
 		let callback : GetParameterCallback | null;
 
 		// Handle first parameter
 		if (typeof keysOrCallback === 'string') {
-			keys = [keysOrCallback];
+			keyArrayOrObject = [keysOrCallback];
 			callback = null;
 		} else if (Array.isArray(keysOrCallback)) {
 			const nonStringIndex = keysOrCallback.findIndex(x => typeof x !== 'string');
@@ -101,14 +97,14 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 			if (nonStringIndex > -1) {
 				throw new TypeError('Error in invocation of storage.get(optional [string|array|object] keys, function callback): Error at parameter "keys": Value did not match any choice.');
 			} else {
-				keys = keysOrCallback;
+				keyArrayOrObject = keysOrCallback;
 				callback = null;
 			}
 		} else if (typeof keysOrCallback === 'object') {
-			keys = keysOrCallback;
+			keyArrayOrObject = keysOrCallback;
 			callback = null;
 		} else if (typeof keysOrCallback === 'undefined') {
-			keys = null;
+			keyArrayOrObject = null;
 			callback = null;
 		} else {
 			throw new TypeError('Error in invocation of storage.get(optional [string|array|object] keys, function callback): Error at parameter "keys": Value did not match any choice.');
@@ -123,49 +119,50 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 			}
 		}
 
-		const op = () => {
-			const lookup = {} as Record<string, { default?: any }>;
+		const op = async () => {
+			const lookup : Record<string, { default?: any }> = {};
 
-			if (keys === null) {
-				Array.from(store.keys()).forEach(key => {
+			if (keyArrayOrObject === null) {
+				Array.from(await store.keys()).forEach(key => {
 					lookup[key] = {};
 				});
-			} else if (typeof keys === 'string') {
-				lookup[keys] = {};
-			} else if (Array.isArray(keys)) {
-				keys.forEach((key, index) => {
+			} else if (typeof keyArrayOrObject === 'string') {
+				lookup[keyArrayOrObject] = {};
+			} else if (Array.isArray(keyArrayOrObject)) {
+				keyArrayOrObject.forEach((key, index) => {
 					if (typeof key !== 'string') {
 						throw new TypeError(`get() Argument 1 must be a string, string[] or an object of key/value pairs. Received an array with a non-string element at index ${ index }: ${ typeof key }`);
+					} else {
+						lookup[key] = {};
 					}
-					lookup[key] = {};
 				});
 			} else {
-				Object.getOwnPropertyNames(keys).forEach(key => {
+				Object.getOwnPropertyNames(keyArrayOrObject).forEach(key => {
 					lookup[key] = {
-						default: keys![key],
+						default: keyArrayOrObject![key],
 					};
 				});
 			}
 
 			const results = {} as Record<string, any>;
 
-			Object.keys(lookup).forEach(key => {
-				const hasDefault = Object.hasOwn(lookup[key], 'default');
+			for (const key of Object.keys(lookup)) {
+				const hasDefaultValue = Object.hasOwn(lookup[key], 'default');
 
-				if (store.has(key)) {
-					let temp = store.get(key);
+				if (await store.has(key)) {
+					let temp = await store.get(key);
 
 					if (typeof temp === 'object') {
-						if (hasDefault) {
+						if (hasDefaultValue) {
 							temp = deepMergeObjects(lookup[key].default, temp);
 						}
 					}
 
 					results[key] = temp;
-				} else if (hasDefault) {
+				} else if (hasDefaultValue) {
 					results[key] = lookup[key].default;
 				}
-			});
+			}
 
 			return results;
 		};
@@ -176,7 +173,7 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 	function remove(keys: string | string[]): Promise<void>;
 	function remove(keys: string | string[], callback: () => void): void;
 	function remove(keys: string | string[], callback?: () => void): void | Promise<void> {
-		const op = () => {
+		const op = async () => {
 			if (typeof keys === 'string') {
 				keys = [keys];
 			} else if (Array.isArray(keys)) {
@@ -195,10 +192,12 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 			} = mergedQuotas;
 
 			updateWriteQuota(MAX_WRITE_OPERATIONS_PER_HOUR, MAX_WRITE_OPERATIONS_PER_MINUTE, writeOperationsPerHour, writeOperationsPerMinute);
-			const changes = store.delete(keys);
 
-			store.data = changes.after.data;
-			dispatchEvent(dispatch, changes);
+			const changes = await Promise.all(keys.map(key => {
+				return store.delete(key);
+			}));
+
+			dispatchEvent(dispatch, changes.flat(1));
 		};
 
 		return handleLegacyCallbacks(op, callback ? callback : null);
@@ -207,7 +206,7 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 	function set(items: Record<string, any>): Promise<void>;
 	function set(items: Record<string, any>, callback: () => void): void;
 	function set(items: Record<string, any>, callback?: () => void): void | Promise<void> {
-		const op = () => {
+		const op = async () => {
 			const {
 				MAX_WRITE_OPERATIONS_PER_HOUR,
 				MAX_WRITE_OPERATIONS_PER_MINUTE,
@@ -218,14 +217,20 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 
 			updateWriteQuota(MAX_WRITE_OPERATIONS_PER_HOUR, MAX_WRITE_OPERATIONS_PER_MINUTE, writeOperationsPerHour, writeOperationsPerMinute);
 
-			const changes = store.set(items);
+			const previousCount = await store.count();
+			const previousTotalBytes = await store.totalBytes();
 
-			if (changes.after.count > MAX_ITEMS) {
-				throw new Error(`Quota exceeded: MAX_ITEMS (${ MAX_ITEMS }) was exceeded. Previous size: ${ changes.before.count }, new size: ${ changes.after.count }.`);
-			} else if (changes.after.totalBytes > QUOTA_BYTES) {
-				throw new Error(`Quota exceeded: QUOTA_BYTES (${ QUOTA_BYTES }) was exceeded. Previous size: ${ changes.before.sizeInBytes }, new size: ${ changes.after.sizeInBytes }`);
+			const changes = await store.set(items);
+
+			const newCount = await store.count();
+			const newTotalBytes = await store.totalBytes();
+
+			if (newCount > MAX_ITEMS) {
+				throw new Error(`Quota exceeded: MAX_ITEMS (${ MAX_ITEMS }) was exceeded. Previous size: ${ previousCount }, new size: ${ newCount }.`);
+			} else if (newTotalBytes > QUOTA_BYTES) {
+				throw new Error(`Quota exceeded: QUOTA_BYTES (${ QUOTA_BYTES }) was exceeded. Previous size: ${ previousTotalBytes }, new size: ${ newTotalBytes }`);
 			} else {
-				const { sizeInBytes } = changes.after;
+				const sizeInBytes = await store.sizeInBytes();
 
 				Object.keys(sizeInBytes).forEach(key => {
 					if (sizeInBytes[key] > QUOTA_BYTES_PER_ITEM) {
@@ -233,7 +238,6 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 					}
 				});
 
-				store.data = changes.after.data;
 				dispatchEvent(dispatch, changes);
 			}
 		};
@@ -244,16 +248,16 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 	function clear(): Promise<void>;
 	function clear(callback: () => void): void;
 	function clear(callback?: () => void): void | Promise<void> {
-		const op = () => {
+		const op = async () => {
 			const {
 				MAX_WRITE_OPERATIONS_PER_HOUR,
 				MAX_WRITE_OPERATIONS_PER_MINUTE,
 			} = mergedQuotas;
 
 			updateWriteQuota(MAX_WRITE_OPERATIONS_PER_HOUR, MAX_WRITE_OPERATIONS_PER_MINUTE, writeOperationsPerHour, writeOperationsPerMinute);
-			const changes = store.clear();
 
-			store.data = changes.after.data;
+			const changes = await store.clear();
+
 			dispatchEvent(dispatch, changes);
 		};
 
@@ -264,12 +268,12 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 	function getBytesInUse(keys?: string | string[] | null) : Promise<number>;
 	function getBytesInUse(keys: string | string[] | null, callback: (bytesInUse: number) => void) : void;
 	function getBytesInUse(keysOrCallback?: ((bytesInUse: number) => void) | string | string[] | null, optCallback?: (bytesInUse: number) => void) : void | Promise<number> {
-		let keys : Array<string> | null;
+		let keyArrayOrObject : Array<string> | null;
 		let callback : ((bytesInUse: number) => void) | null;
 
 		// Handle first parameter
 		if (typeof keysOrCallback === 'string') {
-			keys = [keysOrCallback];
+			keyArrayOrObject = [keysOrCallback];
 			callback = null;
 		} else if (Array.isArray(keysOrCallback)) {
 			const nonStringIndex = keysOrCallback.findIndex(x => typeof x !== 'string');
@@ -277,17 +281,17 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 			if (nonStringIndex > -1) {
 				throw new TypeError(`getBytesInUse() Argument 1 must be null, string, or string[]. Received an array with a non-string element at index ${ nonStringIndex }: ${ typeof keysOrCallback[nonStringIndex] }`);
 			} else {
-				keys = keysOrCallback;
+				keyArrayOrObject = keysOrCallback;
 				callback = null;
 			}
 		} else if (typeof keysOrCallback === 'undefined') {
-			keys = null;
+			keyArrayOrObject = null;
 			callback = null;
 		} else if (typeof keysOrCallback === 'function') {
-			keys = null;
+			keyArrayOrObject = null;
 			callback = keysOrCallback;
 		} else if (keysOrCallback === null) {
-			keys = null;
+			keyArrayOrObject = null;
 			callback = null;
 		} else {
 			throw new TypeError(`Error in invocation of storage.getBytesInUse(optional [string|array] keys, function callback): No matching signature: Argument 1 must be null, string, string[] or function. Received: ${ typeof keysOrCallback }`);
@@ -302,21 +306,19 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 			}
 		}
 
-		const op = () => {
-			if (keys === null) {
-				return store.totalBytes;
+		const op = async () => {
+			if (keyArrayOrObject === null) {
+				return store.totalBytes();
 			} else {
-				const sizeInBytes = store.sizeInBytes;
+				const sizeInBytes = await store.sizeInBytes();
 
-				const total = keys.reduce((temp, key) => {
+				return keyArrayOrObject.reduce((temp, key) => {
 					if (Object.hasOwn(sizeInBytes, key)) {
 						temp += sizeInBytes[key];
 					}
 
 					return temp;
 				}, 0);
-
-				return total;
 			}
 		};
 

@@ -5,31 +5,14 @@
  */
 
 // eslint-disable-next-line consistent-return
-export default function handleLegacyCallbacks(op: () => any, callback: ((...args: any[]) => void) | null): Promise<any> | void {
+export default async function handleLegacyCallbacks(op: () => any, callback: ((...args: any[]) => void) | null) {
 	if (typeof callback === 'function') {
 		throw new Error('Callbacks are unsupported.');
 	}
 
-	globalThis.chrome = globalThis.chrome || {};
-	globalThis.chrome.runtime = globalThis.chrome.runtime || {};
-
 	try {
-		if (op instanceof Promise) {
-			throw new TypeError('handleLegacyCallbacks() does not support asynchronous functions. Argument 1 is a promise.');
-		}
-
-		const result = op();
-
-		if (result instanceof Promise) {
-			throw new TypeError('handleLegacyCallbacks() does not support asynchronous functions. Argument 1 returned a promise.');
-		}
-
-		return Promise.resolve(result);
+		return await op();
 	} catch (e: any) {
-		if (e.toString().indexOf('handleLegacyCallbacks()') > -1) {
-			throw e;
-		} else {
-			return Promise.reject(e);
-		}
+		return Promise.reject(e);
 	}
 }

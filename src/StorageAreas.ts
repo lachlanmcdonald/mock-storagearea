@@ -4,22 +4,22 @@
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
 import { CHROME_LOCAL_STORAGE_DEFAULT_QUOTA, CHROME_SESSION_STORAGE_DEFAULT_QUOTA, CHROME_SYNC_STORAGE_DEFAULT_QUOTA } from './Constants';
-import Store from './Store';
+import { InternalStore } from './Types';
 import createStorageArea from './createStorageArea';
 
-export const createLocalStorageArea = (initialStore?: Store): chrome.storage.LocalStorageArea => {
+export const createLocalStorageArea = (initialStore?: InternalStore): chrome.storage.LocalStorageArea => {
 	return createStorageArea(initialStore, CHROME_LOCAL_STORAGE_DEFAULT_QUOTA);
 };
 
-export const createSyncStorageArea = (initialStore?: Store): chrome.storage.SyncStorageArea => {
+export const createSyncStorageArea = (initialStore?: InternalStore): chrome.storage.SyncStorageArea => {
 	return createStorageArea(initialStore, CHROME_SYNC_STORAGE_DEFAULT_QUOTA);
 };
 
-export const createSessionStorageArea = (initialStore?: Store): chrome.storage.SessionStorageArea => {
+export const createSessionStorageArea = (initialStore?: InternalStore): chrome.storage.SessionStorageArea => {
 	return createStorageArea(initialStore, CHROME_SESSION_STORAGE_DEFAULT_QUOTA);
 };
 
-export const createManagedStorageArea = (initialStore?: Store): chrome.storage.StorageArea => {
+export const createManagedStorageArea = (initialStore?: InternalStore): chrome.storage.StorageArea => {
 	/**
 	 * Removes all items from the _Storage Area_.
 	 */

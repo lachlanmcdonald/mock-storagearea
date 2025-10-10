@@ -20,12 +20,11 @@ export const serialise = (value: unknown, parentIsArray = false, parentIsObject 
 	const isUndefined = typeof value === 'undefined';
 	const isSymbol = typeof value === 'symbol';
 	const isFunction = typeof value === 'function';
-	const isFinite = isNumber && Number.isFinite(value);
 
 	if (isPrimitive) {
 		return JSON.stringify(value);
 	} else if (isNumber) {
-		if (isFinite) {
+		if (Number.isFinite(value)) {
 			return JSON.stringify(value);
 		} else {
 			return parentIsArray || parentIsObject ? JSON.stringify(null) : null;
@@ -72,11 +71,3 @@ export const serialise = (value: unknown, parentIsArray = false, parentIsObject 
 		throw new TypeError(`Unsupported type passed to serialise: ${ typeof value }`);
 	}
 };
-
-/**
- * A function which serialises a value for storage within a Storage Area.
- * - If a string is returned, the property has been successfully serialised.
- * - If `null` is returned, the property should be omitted. Please note that serialise() may also
- *   return the string `"null"`, which as per above, means the value of `null` was successfully serialised.
- */
-export type SerialiseFunction = typeof serialise;

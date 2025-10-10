@@ -15,9 +15,9 @@ import {
 	createSyncStorageArea,
 	deserialise,
 	inspect,
+	MapStore,
 	onChanged,
 	serialise,
-	Store,
 	UNLIMITED_QUOTA
 } from './index';
 
@@ -35,7 +35,7 @@ const IMPORTS = [
 	['inspect', inspect],
 	['onChanged', onChanged],
 	['serialise', serialise],
-	['Store', Store],
+	['Store', MapStore],
 	['UNLIMITED_QUOTA', UNLIMITED_QUOTA],
 ];
 
