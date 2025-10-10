@@ -2,7 +2,7 @@
 
 [![Build](https://github.com/lachlanmcdonald/mock-storagearea/actions/workflows/build.yml/badge.svg?branch=main)][build-link] [![npm version](https://badge.fury.io/js/%40lmcd%2Fmock-storagearea.svg)][package-link] [![License](https://img.shields.io/badge/License-MIT-blue.svg)][license-link] 
 
-__mock-storagearea__ is a implementation of Chrome's [extension storage interface](https://developer.chrome.com/docs/extensions/reference/storage/), i.e. `chrome.storage`. This package is intended for use in development and testing of extensions outside of a browser.
+__mock-storagearea__ is a implementation of Chrome's [extension storage interface](https://developer.chrome.com/docs/extensions/reference/storage/), i.e. `chrome.storage`. This package is intended for use in development and testing of extensions outside of the extension environment.
 
 ## Usage
 
@@ -34,6 +34,28 @@ const chrome = {
 	}
 };
 ```
+
+## Data persistence
+
+By default, __mock-storagearea__  uses a simple interface (`MapStore`) where changes are stored on a `Map` per storage area. This data is not retained between invocations. However, `MapStore` can be initialised with an existing `Map`.
+
+```js
+import {
+	createLocalStorageArea,
+	serialise,
+	MapStore,
+} from '@lmcd/mock-storagearea';
+
+const existingData = new Map(['abc', serialise(123)]);
+const store = new MapStore(existingData);
+const local = createLocalStorageArea(store);
+
+// Access underlying data from the MapStore instance
+const { data } = store;
+```
+
+
+If you wish to synchronise data between the storage area and some other storage, such as `localStorage` or `IndexedDB`, you will need to [implement your own store using the InternalStorage interface](#).
 
 
 ## Listening for changes
