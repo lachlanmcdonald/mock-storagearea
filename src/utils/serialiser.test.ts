@@ -12,7 +12,7 @@ const UNCHANGED_PRIMITIVES = [
 	['True', true],
 	['False', false],
 	['Number', 100],
-] as Array<[string, any]>;
+] as Array<[string, unknown]>;
 
 const OMITTED_OR_NULL = [
 	['NaN', NaN],
@@ -20,14 +20,14 @@ const OMITTED_OR_NULL = [
 	['Negative Infinity', -Infinity],
 	['Symbol', Symbol('Test')],
 	['Undefined', undefined], // eslint-disable-line no-undefined
-] as Array<[string, any]>;
+] as Array<[string, unknown]>;
 
 const UNSERIALISABLE = [
 	['Date', new Date(), '{}'],
 	['RegExp', /abc/gui, '{}'],
 	['Map', new Map(), '{}'],
 	['Set', new Set(), '{}'],
-] as Array<[string, any, string]>;
+] as Array<[string, unknown, string]>;
 
 describe('serialise() and deserialise()', () => {
 	describe('Returned unchanged', () => {

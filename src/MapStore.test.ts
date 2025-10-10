@@ -148,7 +148,7 @@ describe('.delete()', () => {
 		// Sort the results object for comparison
 		results = results.sort((a, b) => {
 			return a.key.localeCompare(b.key);
-		})
+		});
 
 		expect(results).toHaveLength(1);
 		expect(results[0]).toMatchObject({

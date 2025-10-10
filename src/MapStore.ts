@@ -26,6 +26,7 @@ export default class MapStore implements InternalStore {
 	 * used as the initial store. The payload can be any value accepted by the __Map__ constructor,
 	 * The values of payload must be serialised (using {@link serialise}).
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	constructor(payload?: Iterable<any>, serialiser?: SerialiseFunction, deserialiser?: DeserialiseFunction) {
 		this.data = new Map(payload || []);
 		this.serialiser = serialiser || serialise;
@@ -36,18 +37,26 @@ export default class MapStore implements InternalStore {
 	 * Returns whether the store contains the provided key.
 	 */
 	has(key: string) {
-		return Promise.resolve(this.data.has(key));
+		try {
+			return Promise.resolve(this.data.has(key));
+		} catch (e: unknown) {
+			return Promise.reject(e);
+		}
 	}
 
 	/**
 	 * Retrieves the value for the provided key from the store. Will throw
 	 * a __RangeError__ if the key does not exist within the store.
 	 */
-	async get(key: string) {
-		if (await this.has(key)) {
-			return this.deserialiser(this.data.get(key) as string);
-		} else {
-			throw new RangeError(`key does not exist in store: ${ key }`);
+	get(key: string) {
+		try {
+			if (this.data.has(key)) {
+				return Promise.resolve(this.deserialiser(this.data.get(key) as string));
+			} else {
+				throw new RangeError(`key does not exist in store: ${ key }`);
+			}
+		} catch (e: unknown) {
+			return Promise.reject(e);
 		}
 	}
 
@@ -55,71 +64,79 @@ export default class MapStore implements InternalStore {
 	 * Sets values within the store. The payload should be an object of key/value pairs, where
 	 * the value is deserialised (as it will be serialised during import.)
 	 */
-	async set(payload: Record<string, any>) {
-		const changes: Array<StoreChange> = [];
+	set(payload: Record<string, unknown>) {
+		try {
+			const changes: Array<StoreChange> = [];
 
-		for (const key in payload) {
-			if (Object.hasOwn(payload, key)) {
-				const serialisedValue = this.serialiser(payload[key]);
+			for (const key in payload) {
+				if (Object.hasOwn(payload, key)) {
+					const serialisedValue = this.serialiser(payload[key]);
 
-				if (typeof serialisedValue === 'string') {
-					const existBefore = this.data.has(key);
+					if (typeof serialisedValue === 'string') {
+						const existBefore = this.data.has(key);
 
-					changes.push({
-						key,
-						before: {
-							exists: existBefore,
-							value: existBefore ? this.deserialiser(this.data.get(key) as string) : null,
-						},
-						after: {
-							exists: true,
-							value: payload[key],
-						}
-					});
+						changes.push({
+							key,
+							before: {
+								exists: existBefore,
+								value: existBefore ? this.deserialiser(this.data.get(key) as string) : null,
+							},
+							after: {
+								exists: true,
+								value: payload[key],
+							},
+						});
 
-					this.data.set(key, serialisedValue);
+						this.data.set(key, serialisedValue);
+					}
 				}
 			}
-		}
 
-		return changes;
+			return Promise.resolve(changes);
+		} catch (e: unknown) {
+			return Promise.reject(e);
+		}
 	}
 
 	/**
 	 * Removes an item or items from the store.
 	 */
-	async delete(keys: string | string[]) {
-		if (typeof keys === 'string') {
-			keys = [keys];
-		}
+	delete(keys: string | string[]) {
+		try {
+			if (typeof keys === 'string') {
+				keys = [keys];
+			}
 
-		const changes: Array<StoreChange> = [];
+			const changes: Array<StoreChange> = [];
 
-		keys.forEach(key => {
-			const existBefore = this.data.has(key);
+			keys.forEach(key => {
+				const existBefore = this.data.has(key);
 
-			changes.push({
-				key,
-				before: {
-					exists: existBefore,
-					value: existBefore ? this.deserialiser(this.data.get(key) as string) : null,
-				},
-				after: {
-					exists: false,
-					value: null,
-				}
+				changes.push({
+					key,
+					before: {
+						exists: existBefore,
+						value: existBefore ? this.deserialiser(this.data.get(key) as string) : null,
+					},
+					after: {
+						exists: false,
+						value: null,
+					},
+				});
+
+				this.data.delete(key);
 			});
 
-			this.data.delete(key);
-		});
-
-		return changes;
+			return Promise.resolve(changes);
+		} catch (e: unknown) {
+			return Promise.reject(e);
+		}
 	}
 
 	/**
 	 * Removes all items from the store.
 	 */
-	async clear() {
+	clear() {
 		return this.delete(Array.from(this.data.keys()));
 	}
 
@@ -128,18 +145,22 @@ export default class MapStore implements InternalStore {
 	 * string length of the key plus the string length of the serialised value for every item
 	 * in the store.
 	 */
-	async sizeInBytes() {
-		const result = {} as Record<string, number>;
+	sizeInBytes() {
+		try {
+			const result = {} as Record<string, number>;
 
-		for (const key of this.data.keys()) {
-			const value = this.data.get(key);
+			for (const key of this.data.keys()) {
+				const value = this.data.get(key);
 
-			if (typeof value === 'string') {
-				result[key] = key.length + value.length;
+				if (typeof value === 'string') {
+					result[key] = key.length + value.length;
+				}
 			}
-		}
 
-		return Promise.resolve(result);
+			return Promise.resolve(result);
+		} catch (e: unknown) {
+			return Promise.reject(e);
+		}
 	}
 
 	/**
@@ -148,24 +169,44 @@ export default class MapStore implements InternalStore {
 	 * for every item in the store.
 	 */
 	async totalBytes() {
-		return Promise.resolve(Object.values(await this.sizeInBytes()).reduce((k, v) => {
-			return k + v;
-		}, 0));
+		try {
+			return Promise.resolve(Object.values(await this.sizeInBytes()).reduce((k, v) => {
+				return k + v;
+			}, 0));
+		} catch (e: unknown) {
+			return Promise.reject(e);
+		}
 	}
 
 	count() {
-		return Promise.resolve(this.data.size);
+		try {
+			return Promise.resolve(this.data.size);
+		} catch (e: unknown) {
+			return Promise.reject(e);
+		}
 	}
 
 	keys() {
-		return Promise.resolve(Array.from(this.data.keys()));
+		try {
+			return Promise.resolve(Array.from(this.data.keys()));
+		} catch (e: unknown) {
+			return Promise.reject(e);
+		}
 	}
 
 	values() {
-		return Promise.resolve(Array.from(this.data.values()));
+		try {
+			return Promise.resolve(Array.from(this.data.values()));
+		} catch (e: unknown) {
+			return Promise.reject(e);
+		}
 	}
 
 	entries() {
-		return Promise.resolve(Array.from(this.data.entries()));
+		try {
+			return Promise.resolve(Array.from(this.data.entries()));
+		} catch (e: unknown) {
+			return Promise.reject(e);
+		}
 	}
 }

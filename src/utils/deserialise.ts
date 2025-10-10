@@ -4,7 +4,7 @@
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
 
-import { DeserialiseFunction } from "../Types";
+import { DeserialiseFunction } from '../Types';
 
 /**
  * Deserialises a value previously serialised with {@link serialise()}, that is, a

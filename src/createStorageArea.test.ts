@@ -38,7 +38,7 @@ describe('createStorageArea()', () => {
 
 	test('Store can be initialised with a serialiser and deserialiser', () => {
 		/** Serialise all values as a string of 10 characters. */
-		const newSerialiser: SerialiseFunction = (value: any) => {
+		const newSerialiser: SerialiseFunction = (value: unknown) => {
 			return `<${ JSON.stringify(value) }>`;
 		};
 

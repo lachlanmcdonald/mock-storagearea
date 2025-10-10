@@ -43,11 +43,11 @@ export type StoreChange = {
 	key: string;
 	before: {
 		exists: boolean;
-		value: any;
+		value: unknown;
 	};
 	after: {
 		exists: boolean;
-		value: any;
+		value: unknown;
 	};
 };
 
@@ -59,22 +59,22 @@ export interface InternalStore {
 	deserialiser: DeserialiseFunction;
 
 	has(key: string): Promise<boolean>;
-	get(key: string): Promise<any>;
-	set(payload: Record<string, any>): Promise<StoreChange[]>;
-	delete(key: string): Promise<StoreChange[]>;
+	get(key: string): Promise<unknown>;
+	set(payload: Record<string, unknown>): Promise<StoreChange[]>;
+	delete(keys: string | string[]): Promise<StoreChange[]>;
 	clear(): Promise<StoreChange[]>;
 	sizeInBytes(): Promise<Record<string, number>>;
 	totalBytes(): Promise<number>;
 	count(): Promise<number>;
 	keys(): Promise<Array<string>>;
-	values(): Promise<Array<any>>;
+	values(): Promise<Array<unknown>>;
 	entries(): Promise<Array<[string, string]>>;
 }
 
 /**
  * Deserialises a value previously serialised by {@link SerialiseFunction}.
  */
-export type DeserialiseFunction = (value: string) => any;
+export type DeserialiseFunction = (value: string) => unknown;
 
 /**
  * A function which serialises a value for storage within a Storage Area.
@@ -82,5 +82,6 @@ export type DeserialiseFunction = (value: string) => any;
  * - If `null` is returned, the property should be omitted. Please note that serialise() may also
  *   return the string `"null"`, which as per above, means the value of `null` was successfully serialised.
  */
-export type SerialiseFunction = (value: unknown, parentIsArray?: boolean, parentIsObject?: boolean, seenObjects?: Set<any> | null) => string | null;
+export type SerialiseFunction = (value: unknown, parentIsArray?: boolean, parentIsObject?: boolean, seenObjects?: Set<unknown> | null) => string | null;
+export type StorageChangeCallback = (changes: Record<string, chrome.storage.StorageChange>, areaName?: string) => void;
 

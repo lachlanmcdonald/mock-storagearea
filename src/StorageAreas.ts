@@ -25,7 +25,7 @@ export const createManagedStorageArea = (initialStore?: InternalStore): chrome.s
 	 */
 	const clear = (): Promise<void> => {
 		try {
-			throw new Error(`clear() Cannot mutate a managed storage area.`);
+			throw new Error('clear() Cannot mutate a managed storage area.');
 		} catch (e) {
 			return Promise.reject(e);
 		}
@@ -37,7 +37,7 @@ export const createManagedStorageArea = (initialStore?: InternalStore): chrome.s
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const remove = (_keys: string | string[]): Promise<void> => {
 		try {
-			throw new Error(`remove() Cannot mutate a managed storage area.`);
+			throw new Error('remove() Cannot mutate a managed storage area.');
 		} catch (e) {
 			return Promise.reject(e);
 		}
@@ -47,9 +47,9 @@ export const createManagedStorageArea = (initialStore?: InternalStore): chrome.s
 	 * Sets multiple items.
 	*/
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	const set = (_items: Record<string, any>): Promise<void> => {
+	const set = (_items: Record<string, unknown>): Promise<void> => {
 		try {
-			throw new Error(`set() Cannot mutate a managed storage area.`);
+			throw new Error('set() Cannot mutate a managed storage area.');
 		} catch (e) {
 			return Promise.reject(e);
 		}

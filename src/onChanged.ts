@@ -20,7 +20,7 @@ export default function onChanged(areas: Record<string, chrome.storage.StorageAr
 	const keys = Object.getOwnPropertyNames(areas);
 
 	if (keys.length === 0) {
-		throw new TypeError(`onChanged() Argument 1 must have keys, received no keys.`);
+		throw new TypeError('onChanged() Argument 1 must have keys, received no keys.');
 	}
 
 	for (const areaName in areas) {

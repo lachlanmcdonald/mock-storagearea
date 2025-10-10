@@ -12,13 +12,13 @@ import deepMergeObjects from './utils/deepMergeObjects';
 import handleLegacyCallbacks from './utils/handleLegacyCallbacks';
 import updateWriteQuota from './utils/updateWriteQuota';
 
-type GetParameterKeys = string | string[] | Record<string, any> | null;
-type GetParameterCallback = (items: Record<string, any>) => void;
+type GetParameterKeys = string | string[] | Record<string, unknown> | null;
+type GetParameterCallback = (items: Record<string, unknown>) => void;
 
 const dispatchEvent = (dispatcher: (changes: Record<string, chrome.storage.StorageChange>) => void, changes: StoreChange[]) => {
 	const temp = {} as Record<string, {
-		oldValue: any;
-		newValue: any;
+		oldValue: unknown;
+		newValue: unknown;
 	}>;
 
 	for (const k of changes) {
@@ -54,7 +54,7 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 	/**
 	 * Internal store.
 	 */
-	const store = initialStore ? initialStore : new MapStore();
+	const store : InternalStore = initialStore ? initialStore : new MapStore();
 
 	/**
 	 * Event handlers
@@ -81,10 +81,10 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 	}
 
 	function get(callback: GetParameterCallback) : void;
-	function get(keys?: GetParameterKeys) : Promise<Record<string, any>>;
+	function get(keys?: GetParameterKeys) : Promise<Record<string, unknown>>;
 	function get(keys: GetParameterKeys, callback: GetParameterCallback) : void;
-	function get(keysOrCallback?: GetParameterKeys | GetParameterCallback, optCallback?: GetParameterCallback) : void | Promise<Record<string, any>> {
-		let keyArrayOrObject : Record<string, any> | null;
+	function get(keysOrCallback?: GetParameterKeys | GetParameterCallback, optCallback?: GetParameterCallback) : void | Promise<Record<string, unknown>> {
+		let keyArrayOrObject : string[] | Record<string, unknown> | null;
 		let callback : GetParameterCallback | null;
 
 		// Handle first parameter
@@ -120,7 +120,7 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 		}
 
 		const op = async () => {
-			const lookup : Record<string, { default?: any }> = {};
+			const lookup : Record<string, { default?: unknown }> = {};
 
 			if (keyArrayOrObject === null) {
 				Array.from(await store.keys()).forEach(key => {
@@ -130,10 +130,10 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 				lookup[keyArrayOrObject] = {};
 			} else if (Array.isArray(keyArrayOrObject)) {
 				keyArrayOrObject.forEach((key, index) => {
-					if (typeof key !== 'string') {
-						throw new TypeError(`get() Argument 1 must be a string, string[] or an object of key/value pairs. Received an array with a non-string element at index ${ index }: ${ typeof key }`);
-					} else {
+					if (typeof key === 'string') {
 						lookup[key] = {};
+					} else {
+						throw new TypeError(`get() Argument 1 must be a string, string[] or an object of key/value pairs. Received an array with a non-string element at index ${ index }: ${ typeof key }`);
 					}
 				});
 			} else {
@@ -144,30 +144,34 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 				});
 			}
 
-			const results = {} as Record<string, any>;
+			const results = {} as Record<string, unknown>;
+			const promises: Array<Promise<void>> = [];
 
 			for (const key of Object.keys(lookup)) {
 				const hasDefaultValue = Object.hasOwn(lookup[key], 'default');
 
-				if (await store.has(key)) {
-					let temp = await store.get(key);
+				promises.push(store.has(key).then(async hasKey => {
+					if (hasKey) {
+						let temp = await store.get(key);
 
-					if (typeof temp === 'object') {
-						if (hasDefaultValue) {
-							temp = deepMergeObjects(lookup[key].default, temp);
+						if (typeof temp === 'object') {
+							if (hasDefaultValue) {
+								temp = deepMergeObjects(lookup[key].default, temp);
+							}
 						}
-					}
 
-					results[key] = temp;
-				} else if (hasDefaultValue) {
-					results[key] = lookup[key].default;
-				}
+						results[key] = temp;
+					} else {
+						results[key] = lookup[key].default;
+					}
+				}));
 			}
 
+			await Promise.all(promises);
 			return results;
 		};
 
-		return handleLegacyCallbacks(op, callback ? callback : null);
+		return handleLegacyCallbacks(op, callback || null);
 	}
 
 	function remove(keys: string | string[]): Promise<void>;
@@ -193,19 +197,17 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 
 			updateWriteQuota(MAX_WRITE_OPERATIONS_PER_HOUR, MAX_WRITE_OPERATIONS_PER_MINUTE, writeOperationsPerHour, writeOperationsPerMinute);
 
-			const changes = await Promise.all(keys.map(key => {
-				return store.delete(key);
-			}));
+			const changes = await store.delete(keys);
 
-			dispatchEvent(dispatch, changes.flat(1));
+			dispatchEvent(dispatch, changes);
 		};
 
-		return handleLegacyCallbacks(op, callback ? callback : null);
+		return handleLegacyCallbacks(op, callback || null);
 	}
 
-	function set(items: Record<string, any>): Promise<void>;
-	function set(items: Record<string, any>, callback: () => void): void;
-	function set(items: Record<string, any>, callback?: () => void): void | Promise<void> {
+	function set(items: Record<string, unknown>): Promise<void>;
+	function set(items: Record<string, unknown>, callback: () => void): void;
+	function set(items: Record<string, unknown>, callback?: () => void): void | Promise<void> {
 		const op = async () => {
 			const {
 				MAX_WRITE_OPERATIONS_PER_HOUR,
@@ -242,13 +244,13 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 			}
 		};
 
-		return handleLegacyCallbacks(op, callback ? callback : null);
+		return handleLegacyCallbacks(op, callback || null);
 	}
 
 	function clear(): Promise<void>;
 	function clear(callback: () => void): void;
 	function clear(callback?: () => void): void | Promise<void> {
-		const op = async () => {
+		const operation = async () => {
 			const {
 				MAX_WRITE_OPERATIONS_PER_HOUR,
 				MAX_WRITE_OPERATIONS_PER_MINUTE,
@@ -261,7 +263,7 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 			dispatchEvent(dispatch, changes);
 		};
 
-		return handleLegacyCallbacks(op, callback ? callback : null);
+		return handleLegacyCallbacks(operation, callback || null);
 	}
 
 	function getBytesInUse(callback: (bytesInUse: number) => void) : void;
@@ -328,7 +330,7 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 	function setAccessLevel(accessOptions: { accessLevel: chrome.storage.AccessLevel }) : Promise<void>;
 	function setAccessLevel(accessOptions: { accessLevel: chrome.storage.AccessLevel }, callback: () => void) : void;
 	function setAccessLevel(_accessOptions: { accessLevel: chrome.storage.AccessLevel }, callback?: () => void) : Promise<void> | void {
-		return handleLegacyCallbacks(() => {}, callback ? callback : null); // eslint-disable-line no-empty-function
+		return handleLegacyCallbacks(() => {}, callback || null); // eslint-disable-line no-empty-function
 	}
 
 	// Where a quota exists, ensure that it is included in the return value.

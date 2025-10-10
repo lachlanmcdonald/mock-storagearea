@@ -12,7 +12,7 @@
  * @param parentIsObject Value occurs as a property within an object
  * @param seenObjects Objects already seen to avoid circular references
  */
-export const serialise = (value: unknown, parentIsArray = false, parentIsObject = false, seenObjects : Set<any> | null = null) => {
+export const serialise = (value: unknown, parentIsArray = false, parentIsObject = false, seenObjects : Set<unknown> | null = null) => {
 	seenObjects = seenObjects ? seenObjects : new Set();
 
 	const isPrimitive = ['string', 'boolean'].includes(typeof value);
