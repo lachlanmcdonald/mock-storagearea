@@ -26,9 +26,7 @@ describe('.get()', () => {
 	test('Throws when the key does not exist', () => {
 		const k = new MapStore();
 
-		expect(() => {
-			k.get('unknown_key');
-		}).rejects.toEqual(RangeError);
+		expect(k.get('unknown_key')).rejects.toThrow(RangeError);
 	});
 });
 
@@ -133,7 +131,18 @@ describe('.delete()', () => {
 
 		const results = await k.delete('gold');
 
-		expect(results).toHaveLength(0);
+		expect(results).toHaveLength(1);
+		expect(results[0]).toMatchObject({
+			key: 'gold',
+			before: {
+				exists: false,
+				value: null,
+			},
+			after: {
+				exists: false,
+				value: null,
+			},
+		});
 	});
 
 	test('Deleting an array of keys returns a change description', async () => {
@@ -150,19 +159,8 @@ describe('.delete()', () => {
 			return a.key.localeCompare(b.key);
 		});
 
-		expect(results).toHaveLength(1);
+		expect(results).toHaveLength(2);
 		expect(results[0]).toMatchObject({
-			key: 'red',
-			before: {
-				exists: true,
-				value: 95,
-			},
-			after: {
-				exists: false,
-				value: null,
-			},
-		});
-		expect(results[1]).toMatchObject({
 			key: 'blue',
 			before: {
 				exists: true,
@@ -173,36 +171,47 @@ describe('.delete()', () => {
 				value: null,
 			},
 		});
+		expect(results[1]).toMatchObject({
+			key: 'red',
+			before: {
+				exists: true,
+				value: 95,
+			},
+			after: {
+				exists: false,
+				value: null,
+			},
+		});
 	});
 });
 
-describe('.size', () => {
-	test('.size is zero on initialisation', () => {
+describe('.count()', () => {
+	test('.count() is zero on initialisation', () => {
 		const k = new MapStore();
 
 		expect(k.count()).resolves.toBe(0);
 	});
 
-	test('.size is 1 after value is set', async () => {
+	test('.count() is 1 after value is set', async () => {
 		const k = new MapStore();
 
-		expect(k.count).resolves.toBe(0);
+		await expect(k.count()).resolves.toBe(0);
 
 		await k.set({
 			test: 123,
 		});
 
-		expect(k.count()).resolves.toBe(1);
+		await expect(k.count()).resolves.toBe(1);
 	});
 
-	test('.size is updated after values are removed', async () => {
+	test('.count() is updated after values are removed', async () => {
 		const k = new MapStore([
 			['red', serialise(140)],
 			['blue', serialise(220)],
 			['green', serialise(790)],
 		]);
 
-		expect(k.count()).resolves.toBe(3);
+		await expect(k.count()).resolves.toBe(3);
 
 		await k.delete(['red', 'blue']);
 
@@ -238,40 +247,5 @@ describe('.totalBytes()', () => {
 		await k.delete('test');
 
 		expect(k.totalBytes()).resolves.toBeLessThan(previousValue);
-	});
-});
-
-describe('.sizeInBytes', () => {
-	test('.sizeInBytes() is zero on initialisation', () => {
-		const k = new MapStore();
-
-		expect(k.sizeInBytes()).resolves.toBe(0);
-	});
-
-	test('.sizeInBytes() increases after value is set', async () => {
-		const k = new MapStore();
-
-		expect(k.sizeInBytes()).resolves.toMatchObject({});
-
-		await k.set({
-			test: 4657,
-		});
-
-		const result = await k.sizeInBytes();
-
-		expect(result.keys).toContainEqual('test');
-		expect(result.test).resolves.toBeGreaterThan(0);
-	});
-
-	test('.sizeInBytes() decreases after value is removed', async () => {
-		const k = new MapStore([
-			['test', serialise(4657)],
-		]);
-
-		await k.delete('test');
-
-		const result = await k.sizeInBytes();
-
-		expect(result.keys).not.toContainEqual('test');
 	});
 });

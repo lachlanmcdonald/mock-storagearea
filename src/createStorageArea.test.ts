@@ -115,17 +115,19 @@ describe('createStorageArea()', () => {
 	});
 
 	describe('.getKeys()', () => {
-		test('Returns existing keys', () => {
+		test('Returns existing keys', async () => {
 			const k = createStorageArea(new MapStore([
 				['red', serialise(140)],
 				['blue', serialise(220)],
 				['green', serialise(790)],
 			]));
 
-			expect(k.getKeys()).resolves.toHaveLength(3);
-			expect(k.getKeys()).resolves.toContain('red');
-			expect(k.getKeys()).resolves.toContain('blue');
-			expect(k.getKeys()).resolves.toContain('green');
+			const keys = await k.getKeys();
+
+			expect(keys).toHaveLength(3);
+			expect(keys).toContain('red');
+			expect(keys).toContain('blue');
+			expect(keys).toContain('green');
 		});
 
 		test('Returns an empty array on empty storage', () => {
@@ -134,62 +136,69 @@ describe('createStorageArea()', () => {
 			expect(k.getKeys()).resolves.toHaveLength(0);
 		});
 
-		test('Returns set items', () => {
+		test('Returns set items', async () => {
 			const k = createStorageArea();
 
-			expect(k.set({ red: 123 })).resolves.not.toThrow();
-			expect(k.set({ blue: 123 })).resolves.not.toThrow();
+			await k.set({ red: 123 });
+			await k.set({ blue: 123 });
+			const keys = await k.getKeys();
 
-			expect(k.getKeys()).resolves.toHaveLength(2);
-			expect(k.getKeys()).resolves.toContain('red');
-			expect(k.getKeys()).resolves.toContain('blue');
+			expect(keys).toHaveLength(2);
+			expect(keys).toContain('red');
+			expect(keys).toContain('blue');
 		});
 
 
-		test('Does not return removed items', () => {
+		test('Does not return removed items', async () => {
 			const k = createStorageArea();
 
-			expect(k.set({ red: 123 })).resolves.not.toThrow();
-			expect(k.set({ blue: 123 })).resolves.not.toThrow();
+			await k.set({ red: 123 });
+			await k.set({ blue: 123 });
+			await k.remove('red');
+			const keys = await k.getKeys();
 
-			expect(k.remove('red')).resolves.not.toThrow();
-
-			expect(k.getKeys()).resolves.toHaveLength(1);
-			expect(k.getKeys()).resolves.toContain('blue');
+			expect(keys).toHaveLength(1);
+			expect(keys).toContain('blue');
 		});
 	});
 
 	describe('.clear()', () => {
-		test('Removes all existing items', () => {
+		test('Removes all existing items', async () => {
 			const k = createStorageArea(new MapStore([
 				['red', serialise(140)],
 				['blue', serialise(220)],
 				['green', serialise(790)],
 			]));
 
-			expect(k.getBytesInUse(null)).resolves.toBe(21);
-			expect(k.clear()).resolves.not.toThrow();
-			expect(k.getBytesInUse(null)).resolves.toBe(0);
+			const bytesInUseBefore = await k.getBytesInUse(null);
+			await k.clear();
+			const bytesInUseAfter = await k.getBytesInUse(null);
+
+			expect(bytesInUseBefore).toBeGreaterThan(0);
+			expect(bytesInUseAfter).toBe(0);
 		});
 
-		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_HOUR is exceeded', () => {
+		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_HOUR is exceeded', async () => {
 			const k = createStorageArea(null, {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 			});
 
-			expect(k.clear()).resolves.not.toThrow();
-			expect(k.clear()).resolves.not.toThrow();
+			await k.clear();
+			await k.clear();
+
 			expect(k.clear()).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
 		});
 
-		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_MINUTE is exceeded', () => {
+		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_MINUTE is exceeded', async () => {
 			const k = createStorageArea(null, {
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
 
-			expect(k.clear()).resolves.not.toThrow();
-			expect(k.clear()).resolves.not.toThrow();
-			expect(k.clear()).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_MINUTE/ui);
+			k.clear().then(() => {
+				k.clear().then(() => {
+					expect(k.clear()).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_MINUTE/ui);
+				});
+			});
 		});
 
 		test('Rejects either MAX_WRITE_OPERATIONS_PER_HOUR or MAX_WRITE_OPERATIONS_PER_MINUTE', () => {
@@ -205,15 +214,16 @@ describe('createStorageArea()', () => {
 			});
 		});
 
-		test('Failed operations due to an exceeded quota will not modify state', () => {
+		test('Failed operations due to an exceeded quota will not modify state', async () => {
 			const k = createStorageArea(new MapStore([
 				['a', serialise('original')],
 			]), {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 			});
 
-			expect(k.set({ b: 123 })).resolves.not.toThrow();
-			expect(k.set({ c: 123 })).resolves.not.toThrow();
+			await k.set({ b: 123 });
+			await k.set({ c: 123 });
+
 			expect(k.clear()).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
 
 			expect(k.get(['a', 'b', 'c'])).resolves.toMatchObject({

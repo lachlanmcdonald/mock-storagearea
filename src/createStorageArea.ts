@@ -327,10 +327,10 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 		return handleLegacyCallbacks(op, callback);
 	}
 
-	function setAccessLevel(accessOptions: { accessLevel: chrome.storage.AccessLevel }) : Promise<void>;
-	function setAccessLevel(accessOptions: { accessLevel: chrome.storage.AccessLevel }, callback: () => void) : void;
+	function setAccessLevel(_accessOptions: { accessLevel: chrome.storage.AccessLevel }) : Promise<void>;
+	function setAccessLevel(_accessOptions: { accessLevel: chrome.storage.AccessLevel }, callback: () => void) : void;
 	function setAccessLevel(_accessOptions: { accessLevel: chrome.storage.AccessLevel }, callback?: () => void) : Promise<void> | void {
-		return handleLegacyCallbacks(() => {}, callback || null); // eslint-disable-line no-empty-function
+		return handleLegacyCallbacks(() => Promise.resolve(), callback || null);
 	}
 
 	// Where a quota exists, ensure that it is included in the return value.
