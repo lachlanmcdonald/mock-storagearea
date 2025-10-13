@@ -8,13 +8,8 @@ import { deserialise } from './utils/deserialise';
 import { serialise } from './utils/serialiser';
 
 /**
- * A __Store__ represents the underlying data structure of a {@link StorageArea}.
- *
- * - Any operation which modifies the __Store__ (`.set()` or `.delete()`) will
- *   not modify the instance itself, but return a new instance with the modifications
- *   and changes, allowing the result to be inspected.
- * - Values in the __Store__ are serialised using using {@link serialise}, and as such,
- *   some values may throw an exception or be ignored.
+ * A __Map Store__ represents the underlying data structure of a {@link StorageArea} and
+ * stores that data in a simple `Map` instance.
  */
 export default class MapStore implements InternalStore {
 	serialiser: SerialiseFunction;
@@ -22,9 +17,8 @@ export default class MapStore implements InternalStore {
 	data: Map<string, string>;
 
 	/**
-	 * Initialises a new instance of Store with the optional payload
-	 * used as the initial store. The payload can be any value accepted by the __Map__ constructor,
-	 * The values of payload must be serialised (using {@link serialise}).
+	 * Initialises a new instance of MapStore with the optional payload used as the initial store.
+	 * The payload can be any value accepted by the __Map__ constructor, but values must be serialised (using {@link serialise}).
 	 */
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	constructor(payload?: Iterable<any>, serialiser?: SerialiseFunction, deserialiser?: DeserialiseFunction) {
