@@ -21,8 +21,8 @@ export default class MapStore implements InternalStore {
 	 * The payload can be any value accepted by the __Map__ constructor, but values must be serialised (using {@link serialise}).
 	 */
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	constructor(payload?: Iterable<any>, serialiser?: SerialiseFunction, deserialiser?: DeserialiseFunction) {
-		this.data = new Map(payload || []);
+	constructor(initialData?: Iterable<any>, serialiser?: SerialiseFunction, deserialiser?: DeserialiseFunction) {
+		this.data = new Map(initialData || []);
 		this.serialiser = serialiser || serialise;
 		this.deserialiser = deserialiser || deserialise;
 	}
