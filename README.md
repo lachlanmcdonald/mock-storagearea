@@ -37,7 +37,7 @@ const chrome = {
 
 ## Data persistence
 
-By default, __mock-storagearea__  uses a simple interface (`MapStore`) where changes are stored on a `Map` per storage area. This data is not retained between invocations. However, `MapStore` can be initialised with an existing `Map`.
+By default, __mock-storagearea__  uses a simple interface ([MapStore](https://github.com/lachlanmcdonald/mock-storagearea/blob/main/src/MapStore.ts)) where changes are stored on a `Map` per storage area. Any stored data is not retained between sessions. However, `MapStore` can be initialised with an existing `Map` to pre-populate data.
 
 ```js
 import {
@@ -55,8 +55,7 @@ const { data } = store;
 ```
 
 
-If you wish to synchronise data between the storage area and some other storage, such as `localStorage` or `IndexedDB`, you will need to [implement your own store using the InternalStorage interface](#).
-
+If you wish to synchronise data between the storage area and some other persistent storage, such as `localStorage` or `IndexedDB`, you will need to [implement your own store using the InternalStorage interface](https://github.com/lachlanmcdonald/mock-storagearea/wiki/InternalStorage).
 
 ## Listening for changes
 
