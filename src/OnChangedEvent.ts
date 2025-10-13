@@ -4,10 +4,9 @@
  * This file is licensed under the MIT License
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
+import { StorageChangeCallback } from './Types';
 
 const EVENT_NAME = 'changed';
-
-type StorageChangeCallback = (changes: Record<string, chrome.storage.StorageChange>, areaName?: string) => void;
 
 export default function OnChangedEvent<H extends StorageChangeCallback>() {
 	const registered = new Map() as Map<H, (event: Event) => void>;
@@ -17,6 +16,7 @@ export default function OnChangedEvent<H extends StorageChangeCallback>() {
 	 * As Node does not support `CustomEvent`, and extending an `Event` will cause
 	 * issues with TypeScript and `EventTarget`, the data is just stored and retrieved separately.
 	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const eventData = new WeakMap() as WeakMap<Event, any>;
 
 	/**

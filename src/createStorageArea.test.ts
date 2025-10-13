@@ -5,12 +5,11 @@
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
 import { CHROME_LOCAL_STORAGE_DEFAULT_QUOTA, CHROME_SESSION_STORAGE_DEFAULT_QUOTA, CHROME_SYNC_STORAGE_DEFAULT_QUOTA, UNLIMITED_QUOTA } from './Constants';
-import { createManagedStorageArea, createSessionStorageArea, createLocalStorageArea, createSyncStorageArea } from './StorageAreas';
-import Store from './Store';
-import { Quota } from './Types';
-import { serialise, SerialiseFunction } from './utils/serialiser';
-import { DeserialiseFunction } from './utils/deserialise';
 import createStorageArea from './createStorageArea';
+import MapStore from './MapStore';
+import { createLocalStorageArea, createManagedStorageArea, createSessionStorageArea, createSyncStorageArea } from './StorageAreas';
+import { DeserialiseFunction, Quota, SerialiseFunction } from './Types';
+import { serialise } from './utils/serialiser';
 
 const SAMPLE = [
 	['value0', serialise(8546)],
@@ -21,7 +20,7 @@ const SAMPLE = [
 
 describe('createStorageArea()', () => {
 	test('Store can be initialised with an existing payload', () => {
-		createStorageArea(new Store([
+		createStorageArea(new MapStore([
 			['value0', serialise(1234)],
 			['value1', serialise(1234)],
 			['value2', serialise(1234)],
@@ -39,7 +38,7 @@ describe('createStorageArea()', () => {
 
 	test('Store can be initialised with a serialiser and deserialiser', () => {
 		/** Serialise all values as a string of 10 characters. */
-		const newSerialiser: SerialiseFunction = (value: any) => {
+		const newSerialiser: SerialiseFunction = (value: unknown) => {
 			return `<${ JSON.stringify(value) }>`;
 		};
 
@@ -48,7 +47,7 @@ describe('createStorageArea()', () => {
 			return JSON.parse(value.slice(1, -1));
 		};
 
-		const k = createStorageArea(new Store([
+		const k = createStorageArea(new MapStore([
 			['contrast', newSerialiser(15)],
 			['primitive', newSerialiser(99)],
 			['travel', newSerialiser(13)],
@@ -77,7 +76,7 @@ describe('createStorageArea()', () => {
 			['Returns the correct size when storage contains values', SAMPLE, null, 40],
 			['Returns zero when keys are an empty array', SAMPLE, [], 0],
 		])('%s', (_message, initialStore, input, expected) => {
-			const k = createStorageArea(new Store(initialStore));
+			const k = createStorageArea(new MapStore(initialStore));
 
 			expect(k.getBytesInUse(input)).resolves.toBe(expected);
 		});
@@ -86,7 +85,7 @@ describe('createStorageArea()', () => {
 			['Fails when first argument is an array with non-string key', [123]],
 			['Fails when first argument is not a string', true],
 		])('%s', (_message, input) => {
-			const k = createStorageArea(new Store());
+			const k = createStorageArea(new MapStore());
 
 			expect(() => {
 				// @ts-expect-error Expected type mis-match
@@ -96,7 +95,7 @@ describe('createStorageArea()', () => {
 	});
 
 	test('Returns a promise of the total size when arguments are not provided', () => {
-		const k = createStorageArea(new Store(SAMPLE));
+		const k = createStorageArea(new MapStore(SAMPLE));
 
 		expect(k.getBytesInUse()).resolves.toBe(40);
 	});
@@ -116,17 +115,19 @@ describe('createStorageArea()', () => {
 	});
 
 	describe('.getKeys()', () => {
-		test('Returns existing keys', () => {
-			const k = createStorageArea(new Store([
+		test('Returns existing keys', async () => {
+			const k = createStorageArea(new MapStore([
 				['red', serialise(140)],
 				['blue', serialise(220)],
 				['green', serialise(790)],
 			]));
 
-			expect(k.getKeys()).resolves.toHaveLength(3);
-			expect(k.getKeys()).resolves.toContain('red');
-			expect(k.getKeys()).resolves.toContain('blue');
-			expect(k.getKeys()).resolves.toContain('green');
+			const keys = await k.getKeys();
+
+			expect(keys).toHaveLength(3);
+			expect(keys).toContain('red');
+			expect(keys).toContain('blue');
+			expect(keys).toContain('green');
 		});
 
 		test('Returns an empty array on empty storage', () => {
@@ -135,86 +136,92 @@ describe('createStorageArea()', () => {
 			expect(k.getKeys()).resolves.toHaveLength(0);
 		});
 
-		test('Returns set items', () => {
+		test('Returns set items', async () => {
 			const k = createStorageArea();
 
-			expect(k.set({ red: 123 })).resolves.not.toThrow();
-			expect(k.set({ blue: 123 })).resolves.not.toThrow();
+			await k.set({ red: 123 });
+			await k.set({ blue: 123 });
+			const keys = await k.getKeys();
 
-			expect(k.getKeys()).resolves.toHaveLength(2);
-			expect(k.getKeys()).resolves.toContain('red');
-			expect(k.getKeys()).resolves.toContain('blue');
+			expect(keys).toHaveLength(2);
+			expect(keys).toContain('red');
+			expect(keys).toContain('blue');
 		});
 
 
-		test('Does not return removed items', () => {
+		test('Does not return removed items', async () => {
 			const k = createStorageArea();
 
-			expect(k.set({ red: 123 })).resolves.not.toThrow();
-			expect(k.set({ blue: 123 })).resolves.not.toThrow();
+			await k.set({ red: 123 });
+			await k.set({ blue: 123 });
+			await k.remove('red');
+			const keys = await k.getKeys();
 
-			expect(k.remove('red')).resolves.not.toThrow();
-
-			expect(k.getKeys()).resolves.toHaveLength(1);
-			expect(k.getKeys()).resolves.toContain('blue');
+			expect(keys).toHaveLength(1);
+			expect(keys).toContain('blue');
 		});
 	});
 
 	describe('.clear()', () => {
-		test('Removes all existing items', () => {
-			const k = createStorageArea(new Store([
+		test('Removes all existing items', async () => {
+			const k = createStorageArea(new MapStore([
 				['red', serialise(140)],
 				['blue', serialise(220)],
 				['green', serialise(790)],
 			]));
 
-			expect(k.getBytesInUse(null)).resolves.toBe(21);
-			expect(k.clear()).resolves.not.toThrow();
-			expect(k.getBytesInUse(null)).resolves.toBe(0);
+			const bytesInUseBefore = await k.getBytesInUse(null);
+			await k.clear();
+			const bytesInUseAfter = await k.getBytesInUse(null);
+
+			expect(bytesInUseBefore).toBeGreaterThan(0);
+			expect(bytesInUseAfter).toBe(0);
 		});
 
-		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_HOUR is exceeded', () => {
+		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_HOUR is exceeded', async () => {
 			const k = createStorageArea(null, {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 			});
 
-			expect(k.clear()).resolves.not.toThrow();
-			expect(k.clear()).resolves.not.toThrow();
+			await k.clear();
+			await k.clear();
+
 			expect(k.clear()).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
 		});
 
-		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_MINUTE is exceeded', () => {
+		test('Will reject with an error if MAX_WRITE_OPERATIONS_PER_MINUTE is exceeded', async () => {
 			const k = createStorageArea(null, {
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
 
-			expect(k.clear()).resolves.not.toThrow();
-			expect(k.clear()).resolves.not.toThrow();
+			await k.clear();
+			await k.clear();
+
 			expect(k.clear()).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_MINUTE/ui);
 		});
 
-		test('Rejects either MAX_WRITE_OPERATIONS_PER_HOUR or MAX_WRITE_OPERATIONS_PER_MINUTE', () => {
+		test('Rejects either MAX_WRITE_OPERATIONS_PER_HOUR or MAX_WRITE_OPERATIONS_PER_MINUTE', async () => {
 			const k = createStorageArea(null, {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 				MAX_WRITE_OPERATIONS_PER_MINUTE: 2,
 			});
 
-			k.clear().then(() => {
-				k.clear().then(() => {
-					expect(k.clear()).rejects.toThrow(/quota exceeded.+(MAX_WRITE_OPERATIONS_PER_HOUR|MAX_WRITE_OPERATIONS_PER_MINUTE)/ui);
-				});
-			});
+			await k.clear();
+			await k.clear();
+
+			expect(k.clear()).rejects.toThrow(/quota exceeded.+(MAX_WRITE_OPERATIONS_PER_HOUR|MAX_WRITE_OPERATIONS_PER_MINUTE)/ui);
 		});
 
-		test('Failed operations due to an exceeded quota will not modify state', () => {
-			const k = createStorageArea(new Store([
+		test('Failed operations due to an exceeded quota will not modify state', async () => {
+			const k = createStorageArea(new MapStore([
 				['a', serialise('original')],
 			]), {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,
 			});
 
-			expect(k.set({ b: 123 })).resolves.not.toThrow();
-			expect(k.set({ c: 123 })).resolves.not.toThrow();
+			await k.set({ b: 123 });
+			await k.set({ c: 123 });
+
 			expect(k.clear()).rejects.toThrow(/quota exceeded.+MAX_WRITE_OPERATIONS_PER_HOUR/ui);
 
 			expect(k.get(['a', 'b', 'c'])).resolves.toMatchObject({
@@ -227,7 +234,7 @@ describe('createStorageArea()', () => {
 
 	describe('.get()', () => {
 		test('Returns a value when it exists', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['test', serialise(123)],
 			]));
 
@@ -237,7 +244,7 @@ describe('createStorageArea()', () => {
 		});
 
 		test('Only returns keys which exist', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['test', serialise(123)],
 			]));
 
@@ -247,7 +254,7 @@ describe('createStorageArea()', () => {
 		});
 
 		test('Returns default values for missing keys', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['test', serialise(123)],
 			]));
 
@@ -263,7 +270,7 @@ describe('createStorageArea()', () => {
 		});
 
 		test('Returns all keys if null is provided', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['a', serialise(123)],
 				['b', serialise(123)],
 				['c', serialise(123)],
@@ -322,7 +329,7 @@ describe('createStorageArea()', () => {
 		 *    }
 		 */
 		test('Returns full objects when a default is provided on a nested object', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['a', serialise({
 					b: 123,
 					c: { d: 123 },
@@ -463,7 +470,7 @@ describe('createStorageArea()', () => {
 		});
 
 		test('Failed operations due to an exceeded quota will not modify state', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['a', serialise('original')],
 			]), {
 				QUOTA_BYTES_PER_ITEM: 32,
@@ -483,7 +490,7 @@ describe('createStorageArea()', () => {
 
 	describe('.remove()', () => {
 		test('Can remove a key', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['value0', serialise(1234)],
 				['value1', serialise(1234)],
 				['value2', serialise(1234)],
@@ -494,7 +501,7 @@ describe('createStorageArea()', () => {
 		});
 
 		test('Can remove keys', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['value0', serialise(1234)],
 				['value1', serialise(1234)],
 				['value2', serialise(1234)],
@@ -504,13 +511,13 @@ describe('createStorageArea()', () => {
 			expect(k.remove(['value0', 'value1'])).resolves.not.toThrow();
 		});
 
-		test('Removing a non-existant key is not an error', () => {
+		test('Removing a non-existent key is not an error', () => {
 			const k = createStorageArea();
 
 			expect(k.remove('key')).resolves.not.toThrow();
 		});
 
-		test('Removing non-existant keys is not an error', () => {
+		test('Removing non-existent keys is not an error', () => {
 			const k = createStorageArea();
 
 			expect(k.remove(['key1', 'key2'])).resolves.not.toThrow();
@@ -554,7 +561,7 @@ describe('createStorageArea()', () => {
 		});
 
 		test('Failed operations due to an exceeded quota will not modify state', () => {
-			const k = createStorageArea(new Store([
+			const k = createStorageArea(new MapStore([
 				['a', serialise('original')],
 			]), {
 				MAX_WRITE_OPERATIONS_PER_HOUR: 2,

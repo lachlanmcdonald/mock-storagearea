@@ -8,11 +8,12 @@
  * Recursively merges the `over` object over the `under` object. Values are only updated
  * when `undefined`.
  *
- * NOTE: This behaviour is only used when calling `.get()`. Objects are not merged in this
+ * Note: This behaviour is only used when calling `.get()`. Objects are not merged in this
  * way when calling `.set()`.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function deepMergeObjects(under: any, over: any) {
-	const temp = {} as Record<string, any>;
+	const temp = {} as Record<string, unknown>;
 
 	Object.getOwnPropertyNames(under).forEach(key => {
 		if (Object.hasOwn(over, key)) {

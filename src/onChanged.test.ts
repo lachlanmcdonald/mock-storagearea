@@ -3,9 +3,9 @@
  * This file is licensed under the MIT License
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
-import { createLocalStorageArea, createSessionStorageArea } from './StorageAreas';
-import Store from './Store';
+import MapStore from './MapStore';
 import onChanged from './onChanged';
+import { createLocalStorageArea, createSessionStorageArea } from './StorageAreas';
 import { serialise } from './utils/serialiser';
 
 interface Chrome {
@@ -21,12 +21,12 @@ describe('onChanged()', () => {
 	let chrome: Chrome = {};
 
 	beforeEach(() => {
-		const session = createSessionStorageArea(new Store([
+		const session = createSessionStorageArea(new MapStore([
 			['apple', serialise('Error')],
 			['orange', serialise('Error')],
 		]));
 
-		const local = createLocalStorageArea(new Store([
+		const local = createLocalStorageArea(new MapStore([
 			['apple', serialise(1234)],
 			['orange', serialise(512)],
 		]));

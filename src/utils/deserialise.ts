@@ -4,16 +4,12 @@
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
 
+import { DeserialiseFunction } from '../Types';
+
 /**
  * Deserialises a value previously serialised with {@link serialise()}, that is, a
  * value which was serialised in accordance with the observed serialisation rules in Chrome.
  */
-
-export const deserialise = (value: string) => {
+export const deserialise: DeserialiseFunction = (value: string) => {
 	return JSON.parse(value);
 };
-
-/**
- * Deserialises a value previously serialised by {@link SerialiseFunction}.
- */
-export type DeserialiseFunction = typeof deserialise;

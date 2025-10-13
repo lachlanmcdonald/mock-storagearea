@@ -3,8 +3,7 @@
  * This file is licensed under the MIT License
  * https://github.com/lachlanmcdonald/mock-storagearea
  */
-
-import Store from './Store';
+import MapStore from './MapStore';
 
 export interface Quota {
 	MAX_ITEMS: number
@@ -32,7 +31,55 @@ export type PropertyChanges = Record<string, {
 }>;
 
 export type Changes = {
-	before: Store
-	after: Store
+	before: MapStore
+	after: MapStore
 	changes: PropertyChanges
 };
+
+/**
+ * Change description from a Store
+ */
+export type StoreChange = {
+	key: string;
+	before: {
+		exists: boolean;
+		value: unknown;
+	};
+	after: {
+		exists: boolean;
+		value: unknown;
+	};
+};
+
+/**
+ * InternalStore
+ */
+export interface InternalStore {
+	serialiser: SerialiseFunction;
+	deserialiser: DeserialiseFunction;
+
+	has(key: string): Promise<boolean>;
+	get(key: string): Promise<unknown>;
+	set(payload: Record<string, unknown>): Promise<StoreChange[]>;
+	delete(keys: string | string[]): Promise<StoreChange[]>;
+	clear(): Promise<StoreChange[]>;
+	sizeInBytes(): Promise<Record<string, number>>;
+	totalBytes(): Promise<number>;
+	count(): Promise<number>;
+	keys(): Promise<Array<string>>;
+}
+
+/**
+ * Deserialises a value previously serialised by {@link SerialiseFunction}.
+ */
+export type DeserialiseFunction = (value: string) => unknown;
+
+/**
+ * A function which serialises a value for storage within a Storage Area.
+ * - If a string is returned, the property has been successfully serialised.
+ * - If `null` is returned, the property should be omitted. Please note that serialise() may also
+ *   return the string `"null"`, which as per above, means the value of `null` was successfully serialised.
+ */
+export type SerialiseFunction = (value: unknown, parentIsArray?: boolean, parentIsObject?: boolean, seenObjects?: Set<unknown> | null) => string | null;
+export type StorageChangeCallback = (changes: Record<string, chrome.storage.StorageChange>, areaName?: string) => void;
+
