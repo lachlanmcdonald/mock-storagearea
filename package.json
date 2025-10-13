@@ -34,7 +34,7 @@
 		"@eslint/js": "^9.37.0",
 		"@lmcd/eslint-config": "^0.8.0",
 		"@stylistic/eslint-plugin": "^5.4.0",
-		"@types/chrome": "^0.1.22",
+		"@types/chrome": "^0.1.24",
 		"@types/jest": "^30.0.0",
 		"@typescript-eslint/eslint-plugin": "^8.46.0",
 		"@typescript-eslint/parser": "^8.46.0",
