@@ -67,8 +67,6 @@ export interface InternalStore {
 	totalBytes(): Promise<number>;
 	count(): Promise<number>;
 	keys(): Promise<Array<string>>;
-	values(): Promise<Array<unknown>>;
-	entries(): Promise<Array<[string, string]>>;
 }
 
 /**

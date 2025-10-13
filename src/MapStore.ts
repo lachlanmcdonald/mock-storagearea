@@ -187,20 +187,4 @@ export default class MapStore implements InternalStore {
 			return Promise.reject(e);
 		}
 	}
-
-	values() {
-		try {
-			return Promise.resolve(Array.from(this.data.values()));
-		} catch (e: unknown) {
-			return Promise.reject(e);
-		}
-	}
-
-	entries() {
-		try {
-			return Promise.resolve(Array.from(this.data.entries()));
-		} catch (e: unknown) {
-			return Promise.reject(e);
-		}
-	}
 }
