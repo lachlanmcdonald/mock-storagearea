@@ -93,7 +93,7 @@ pnpm run test
 
 ## History
 
-#### 0.3.2
+#### 0.3.2
 
 - Fixed an issue where deleting a non-existent key or clearing an empty storage area would still fire `changed` events.
 - Added tests for listening to `changed` events directly on a storage area, i.e. `chrome.storage.local.onChanged`.
