@@ -16,19 +16,27 @@ type GetParameterKeys = string | string[] | Record<string, unknown> | null;
 type GetParameterCallback = (items: Record<string, unknown>) => void;
 
 const dispatchEvent = (dispatcher: (changes: Record<string, chrome.storage.StorageChange>) => void, changes: StoreChange[]) => {
+	let hasChanges = false;
+
 	const temp = {} as Record<string, {
 		oldValue: unknown;
 		newValue: unknown;
 	}>;
 
 	for (const k of changes) {
-		temp[k.key] = {
-			oldValue: k.before.exists ? k.before.value : undefined, // eslint-disable-line no-undefined
-			newValue: k.after.exists ? k.after.value : undefined, // eslint-disable-line no-undefined
-		};
+		if (k.before.exists || k.after.exists) {
+			temp[k.key] = {
+				oldValue: k.before.exists ? k.before.value : undefined, // eslint-disable-line no-undefined
+				newValue: k.after.exists ? k.after.value : undefined, // eslint-disable-line no-undefined
+			};
+
+			hasChanges = true;
+		}
 	}
 
-	dispatcher(temp);
+	if (hasChanges) {
+		dispatcher(temp);
+	}
 };
 
 const STORAGE_AREA_MAP : WeakMap<chrome.storage.StorageArea, {

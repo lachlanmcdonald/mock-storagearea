@@ -661,6 +661,124 @@ describe('createStorageArea()', () => {
 			});
 		});
 	});
+
+	describe('onChanged()', () => {
+		test('Listener fires on set() for new values', (done) => {
+			const area = createStorageArea();
+
+			area.onChanged.addListener((changes: { [key: string]: chrome.storage.StorageChange }) => {
+				expect(changes).toMatchObject({
+					newKey: {
+						oldValue: undefined, // eslint-disable-line no-undefined
+						newValue: 1234,
+					},
+				});
+
+				done();
+			});
+
+			expect(() => {
+				area.set({
+					newKey: 1234,
+				});
+			}).not.toThrow();
+		});
+
+		test('Listener fires on set() for existing values', (done) => {
+			const area = createStorageArea(new MapStore([
+				['existingKey', serialise(0)],
+			]));
+
+			area.onChanged.addListener((changes: { [key: string]: chrome.storage.StorageChange }) => {
+				expect(changes).toMatchObject({
+					existingKey: {
+						oldValue: 0,
+						newValue: 1234,
+					},
+				});
+
+				done();
+			});
+
+			expect(() => {
+				area.set({
+					existingKey: 1234,
+				});
+			}).not.toThrow();
+		});
+
+		test('Listener fires on remove()', (done) => {
+			const area = createStorageArea(new MapStore([
+				['existingKey', serialise(1234)],
+			]));
+
+			area.onChanged.addListener((changes: { [key: string]: chrome.storage.StorageChange }) => {
+				expect(changes).toMatchObject({
+					existingKey: {
+						oldValue: 1234,
+						newValue: undefined, // eslint-disable-line no-undefined
+					},
+				});
+
+				done();
+			});
+
+			expect(() => {
+				area.remove(['existingKey']);
+			}).not.toThrow();
+		});
+
+		test('Listener does not fire when remove() called on non-existent key', () => {
+			const area = createStorageArea(new MapStore([
+				['existingKey', serialise(1234)],
+			]));
+
+			const listener = jest.fn();
+
+			area.onChanged.addListener(listener);
+
+			expect(async () => {
+				await area.remove(['someOtherValue']);
+
+				expect(listener).not.toHaveBeenCalled();
+			}).not.toThrow();
+		});
+
+		test('Listener does not fire when clear() empty store', () => {
+			const area = createStorageArea();
+
+			const listener = jest.fn();
+
+			area.onChanged.addListener(listener);
+
+			expect(async () => {
+				await area.remove(['someOtherValue']);
+
+				expect(listener).not.toHaveBeenCalled();
+			}).not.toThrow();
+		});
+
+		test('Listener fires on remove() only with existent key', (done) => {
+			const area = createStorageArea(new MapStore([
+				['existingKey', serialise(1234)],
+			]));
+
+			area.onChanged.addListener((changes) => {
+				expect(changes).toMatchObject({
+					existingKey: {
+						oldValue: 1234,
+						newValue: undefined, // eslint-disable-line no-undefined
+					},
+				});
+
+				done();
+			});
+
+			expect(async () => {
+				await area.remove(['existingKey', 'someOtherValue']);
+			}).not.toThrow();
+		});
+	});
 });
 
 describe('createStorageArea()', () => {
