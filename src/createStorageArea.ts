@@ -150,21 +150,23 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 			for (const key of Object.keys(lookup)) {
 				const hasDefaultValue = Object.hasOwn(lookup[key], 'default');
 
-				promises.push(store.has(key).then(async hasKey => {
+				const op = store.has(key).then(async hasKey => {
 					if (hasKey) {
-						let temp = await store.get(key);
+						let value = await store.get(key);
 
-						if (typeof temp === 'object') {
+						if (typeof value === 'object' && Array.isArray(value) === false && value !== null) {
 							if (hasDefaultValue) {
-								temp = deepMergeObjects(lookup[key].default, temp);
+								value = deepMergeObjects(lookup[key].default, value);
 							}
 						}
 
-						results[key] = temp;
-					} else {
+						results[key] = value;
+					} else if (hasDefaultValue) {
 						results[key] = lookup[key].default;
 					}
-				}));
+				});
+
+				promises.push(op);
 			}
 
 			await Promise.all(promises);

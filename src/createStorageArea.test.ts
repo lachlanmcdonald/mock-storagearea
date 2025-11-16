@@ -355,6 +355,84 @@ describe('createStorageArea()', () => {
 				},
 			});
 		});
+
+		test('Handles existing objects for a property with the default of null', () => {
+			const k = createStorageArea(new MapStore([
+				['a', serialise([1, 2, 3])],
+			]));
+
+			expect(k.get({
+				a: null,
+				b: null,
+			})).resolves.toMatchObject({
+				a: [1, 2, 3],
+				b: null,
+			});
+		});
+
+		/**
+		await chrome.storage.local.set({
+			a: {
+				b: 123,
+				c: [1, 2, {
+					x: 123,
+				}],
+				d: {
+					e: 1,
+					f: null,
+				},
+			},
+		});
+
+		await chrome.storage.local.get({
+			a: {
+				b: null,
+				c: null,
+				d: {
+					f: 1,
+				},
+			},
+		});
+		*/
+		test('Handles a contrived example', () => {
+			const k = createStorageArea(new MapStore([
+				['a', serialise({
+					b: 123,
+					c: [1, 2, {
+						x: 123,
+					}],
+					d: {
+						e: 1,
+						f: null,
+					},
+				})],
+			]));
+
+			expect(k.get({
+				a: {
+					b: null,
+					c: null,
+					d: {
+						f: 1,
+					},
+				},
+			})).resolves.toMatchObject({
+				a: {
+					b: 123,
+					c: [
+						1,
+						2,
+						{
+							x: 123,
+						},
+					],
+					d: {
+						e: 1,
+						f: null,
+					},
+				},
+			});
+		});
 	});
 
 	describe('.set()', () => {

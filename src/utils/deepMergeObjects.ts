@@ -11,47 +11,52 @@
  * Note: This behaviour is only used when calling `.get()`. Objects are not merged in this
  * way when calling `.set()`.
  */
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function deepMergeObjects(under: any, over: any) {
 	const temp = {} as Record<string, unknown>;
 
-	Object.getOwnPropertyNames(under).forEach(key => {
-		if (Object.hasOwn(over, key)) {
-			if (typeof over[key] === 'object') {
-				if (over[key] === null || Array.isArray(over[key]) || typeof over[key] === 'function') {
-					temp[key] = structuredClone(over[key]);
-				} else if (typeof under[key] === 'object') {
-					temp[key] = deepMergeObjects(under[key], over[key]);
-				} else {
-					temp[key] = structuredClone(over[key]);
+	if (under !== null) {
+		Object.getOwnPropertyNames(under).forEach((key) => {
+			if (Object.hasOwn(over, key)) {
+				if (typeof over[key] === 'object') {
+					if (over[key] === null || Array.isArray(over[key]) || typeof over[key] === 'function') {
+						temp[key] = structuredClone(over[key]);
+					} else if (typeof under[key] === 'object') {
+						temp[key] = deepMergeObjects(under[key], over[key]);
+					} else {
+						temp[key] = structuredClone(over[key]);
+					}
+				} else if (typeof over[key] !== 'undefined') {
+					temp[key] = over[key];
+				} else if (typeof under[key] !== 'undefined') {
+					temp[key] = under[key];
 				}
-			} else if (typeof over[key] !== 'undefined') {
-				temp[key] = over[key];
+			} else if (typeof under[key] === 'object') {
+				temp[key] = structuredClone(under[key]);
 			} else if (typeof under[key] !== 'undefined') {
 				temp[key] = under[key];
 			}
-		} else if (typeof under[key] === 'object') {
-			temp[key] = structuredClone(under[key]);
-		} else if (typeof under[key] !== 'undefined') {
-			temp[key] = under[key];
-		}
-	});
+		});
+	}
 
-	Object.getOwnPropertyNames(over).forEach(key => {
-		if (Object.hasOwn(temp, key) === false) {
-			if (typeof over[key] === 'object') {
-				if (over[key] === null || Array.isArray(over[key]) || typeof over[key] === 'function') {
-					temp[key] = structuredClone(over[key]);
-				} else if (typeof temp[key] === 'object') {
-					temp[key] = deepMergeObjects(temp[key], over[key]);
-				} else {
-					temp[key] = structuredClone(over[key]);
+	if (over !== null) {
+		Object.getOwnPropertyNames(over).forEach(key => {
+			if (Object.hasOwn(temp, key) === false) {
+				if (typeof over[key] === 'object') {
+					if (over[key] === null || Array.isArray(over[key]) || typeof over[key] === 'function') {
+						temp[key] = structuredClone(over[key]);
+					} else if (typeof temp[key] === 'object') {
+						temp[key] = deepMergeObjects(temp[key], over[key]);
+					} else {
+						temp[key] = structuredClone(over[key]);
+					}
+				} else if (typeof over[key] !== 'undefined') {
+					temp[key] = over[key];
 				}
-			} else if (typeof over[key] !== 'undefined') {
-				temp[key] = over[key];
 			}
-		}
-	});
+		});
+	}
 
 	return temp;
 }

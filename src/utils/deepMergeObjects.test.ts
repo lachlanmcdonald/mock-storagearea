@@ -119,6 +119,34 @@ test('Merges over base, replacing primitives', () => {
 	});
 });
 
+test('Merges over base with an object, replacing null', () => {
+	const baseObject = {
+		c: null,
+	};
+
+	const result = deepMergeObjects(baseObject, {
+		c: { a: 1 },
+	});
+
+	expect(result).toMatchObject({
+		c: { a: 1 },
+	});
+});
+
+test('Merges over base with an array, replacing null', () => {
+	const baseObject = {
+		c: null,
+	};
+
+	const result = deepMergeObjects(baseObject, {
+		c: [1, 2, 3],
+	});
+
+	expect(result).toMatchObject({
+		c: [1, 2, 3],
+	});
+});
+
 test('Replaces null', () => {
 	const baseObject = {
 		c: null,
