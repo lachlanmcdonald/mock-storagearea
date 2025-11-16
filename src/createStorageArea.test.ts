@@ -295,39 +295,39 @@ describe('createStorageArea()', () => {
 			expect(k.get(['a', 'b', 'c'])).resolves.toMatchObject({});
 		});
 
-		/**
-		 * In Chrome, the following command:
-		 *
-		 *     window.chrome.storage.local.set({
-		 *         a: {
-		 *             b: 123,
-		 *             c: { d: 123 },
-		 *         },
-		 *     }, () => {
-		 *         window.chrome.storage.local.get({
-		 *             a: {
-		 *                 c: {
-		 *                     e: 4567,
-		 *                     k: undefined,
-		 *                 },
-		 *             },
-		 *         }, data => {
-		 *             console.log(data);
-		 *         });
-		 *     });
-		 *
-		 * Will return:
-		 *
-		 *    {
-		 *        "a": {
-		 *            "b": 123,
-		 *            "c": {
-		 *                "d": 123,
-		 *                "e": 4567
-		 *            }
-		 *        }
-		 *    }
-		 */
+		/*
+		 	In Chrome, the following command:
+
+			window.chrome.storage.local.set({
+				a: {
+					b: 123,
+					c: { d: 123 },
+				},
+			}, () => {
+				window.chrome.storage.local.get({
+					a: {
+						c: {
+							e: 4567,
+							k: undefined,
+						},
+					},
+				}, data => {
+					console.log(data);
+				});
+			});
+
+			Will return:
+
+			{
+				"a": {
+					"b": 123,
+					"c": {
+						"d": 123,
+						"e": 4567
+					}
+				}
+			}
+		*/
 		test('Returns full objects when a default is provided on a nested object', () => {
 			const k = createStorageArea(new MapStore([
 				['a', serialise({
@@ -370,29 +370,29 @@ describe('createStorageArea()', () => {
 			});
 		});
 
-		/**
-		await chrome.storage.local.set({
-			a: {
-				b: 123,
-				c: [1, 2, {
-					x: 123,
-				}],
-				d: {
-					e: 1,
-					f: null,
+		/*
+			await chrome.storage.local.set({
+				a: {
+					b: 123,
+					c: [1, 2, {
+						x: 123,
+					}],
+					d: {
+						e: 1,
+						f: null,
+					},
 				},
-			},
-		});
+			});
 
-		await chrome.storage.local.get({
-			a: {
-				b: null,
-				c: null,
-				d: {
-					f: 1,
+			await chrome.storage.local.get({
+				a: {
+					b: null,
+					c: null,
+					d: {
+						f: 1,
+					},
 				},
-			},
-		});
+			});
 		*/
 		test('Handles a contrived example', () => {
 			const k = createStorageArea(new MapStore([
