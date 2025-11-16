@@ -13,20 +13,12 @@ export default function OnChangedEvent<H extends StorageChangeCallback>() {
 	const eventTarget = new EventTarget();
 
 	/**
-	 * As Node does not support `CustomEvent`, and extending an `Event` will cause
-	 * issues with TypeScript and `EventTarget`, the data is just stored and retrieved separately.
-	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const eventData = new WeakMap() as WeakMap<Event, any>;
-
-	/**
 	 * Registers an event listener callback to an event.
 	 */
 	function addListener(callback: H) {
 		const handleEvent = (event: Event) => {
-			if (eventData.has(event)) {
-				const { changes, areaName } = eventData.get(event);
-
+			if (event instanceof CustomEvent) {
+				const { changes, areaName } = event.detail;
 				callback(changes, areaName);
 			}
 		};
@@ -68,10 +60,14 @@ export default function OnChangedEvent<H extends StorageChangeCallback>() {
 	 * a Storage Area.
 	 */
 	function dispatch(changes: Record<string, chrome.storage.StorageChange>, areaName?: string) {
-		const e = new Event(EVENT_NAME);
+		const event = new CustomEvent(EVENT_NAME, {
+			detail: {
+				changes,
+				areaName,
+			},
+		});
 
-		eventData.set(e, { changes, areaName });
-		eventTarget.dispatchEvent(e);
+		eventTarget.dispatchEvent(event);
 	}
 
 	return {
