@@ -90,3 +90,31 @@ pnpm run test
 [package-link]: https://www.npmjs.com/package/@lmcd/mock-storagearea
 [license-link]: https://github.com/lachlanmcdonald/mock-storagearea/blob/main/LICENSE
 [API]: https://github.com/lachlanmcdonald/mock-storagearea/wiki/API
+
+## History
+
+#### 0.3.2
+
+- Fixed an issue where deleting a non-existent key or clearing an empty storage area would still fire `changed` events.
+- Added tests for listening to `changed` events directly on a storage area, i.e. `chrome.storage.local.onChanged`.
+
+#### 0.3.1
+
+- Fixed an issue where using `null` as the default value for a key that already exists, and is an object, would throw an error.
+
+#### 0.3.0
+
+- Rewrite of the underlying data structure to make the intermediate storage object interchangeable and more developer-friendly.
+- Updates to the documentation.
+
+#### 0.2.0
+
+- Fixed `getKeys()`
+
+#### 0.1.1
+
+- Fixed entry point in package.
+
+#### 0.1.0
+
+- Initial release.
