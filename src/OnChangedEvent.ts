@@ -9,33 +9,43 @@ import { StorageChangeCallback } from './Types';
 const EVENT_NAME = 'changed';
 
 export default function OnChangedEvent<H extends StorageChangeCallback>() {
-	const callbackRegistration = new Map() as Map<H, (event: Event) => void>;
+	const registered = new Map() as Map<H, (event: Event) => void>;
 	const eventTarget = new EventTarget();
+
+	/**
+	 * As Node does not support `CustomEvent`, and extending an `Event` will cause
+	 * issues with TypeScript and `EventTarget`, the data is just stored and retrieved separately.
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const eventData = new WeakMap() as WeakMap<Event, any>;
 
 	/**
 	 * Registers an event listener callback to an event.
 	 */
 	function addListener(callback: H) {
-		const handler = (event: Event) => {
-			if (event instanceof CustomEvent) {
-				const { changes, areaName } = event.detail;
+		const handleEvent = (event: Event) => {
+			if (eventData.has(event)) {
+				const { changes, areaName } = eventData.get(event);
+
 				callback(changes, areaName);
 			}
 		};
 
-		eventTarget.addEventListener(EVENT_NAME, handler);
-		callbackRegistration.set(callback, handler);
+		eventTarget.addEventListener(EVENT_NAME, handleEvent);
+		registered.set(callback, handleEvent);
 	}
 
 	/**
 	 * Removes an event listener callback on an event.
 	 */
 	function removeListener(callback: H) {
-		if (callbackRegistration.has(callback)) {
-			const handler = callbackRegistration.get(callback)!;
+		const k = registered.has(callback);
 
-			eventTarget.removeEventListener(EVENT_NAME, handler);
-			callbackRegistration.delete(callback);
+		if (k) {
+			const handleEvent = registered.get(callback) as (event: Event) => void;
+
+			eventTarget.removeEventListener(EVENT_NAME, handleEvent);
+			registered.delete(callback);
 		}
 	}
 
@@ -43,28 +53,25 @@ export default function OnChangedEvent<H extends StorageChangeCallback>() {
 	 * Return if the event listener callback is registered on an event.
 	 */
 	function hasListener(callback: H) {
-		return callbackRegistration.has(callback);
+		return registered.has(callback);
 	}
 
 	/**
 	 * Return if any event listener callbacks are registered on an event.
 	 */
 	function hasListeners() {
-		return callbackRegistration.size > 0;
+		return registered.size > 0;
 	}
 
 	/**
-	 * Dispatches a new event which indicates a change has occurred within a Storage Area.
+	 * Dispatches a new event which indicates a change has occurred within
+	 * a Storage Area.
 	 */
 	function dispatch(changes: Record<string, chrome.storage.StorageChange>, areaName?: string) {
-		const event = new CustomEvent(EVENT_NAME, {
-			detail: {
-				changes,
-				areaName,
-			},
-		});
+		const e = new Event(EVENT_NAME);
 
-		eventTarget.dispatchEvent(event);
+		eventData.set(e, { changes, areaName });
+		eventTarget.dispatchEvent(e);
 	}
 
 	return {
