@@ -39,7 +39,7 @@ const dispatchEvent = (dispatcher: (changes: Record<string, chrome.storage.Stora
 	}
 };
 
-const STORAGE_AREA_MAP : WeakMap<chrome.storage.StorageArea, {
+const STORAGE_AREA_MAP : WeakMap<chrome.storage.StorageArea & Partial<Quota>, {
 	writeOperationsPerHour: Map<number, number>,
 	writeOperationsPerMinute: Map<number, number>,
 	quota: Quota,
@@ -50,7 +50,7 @@ export const inspect = (storageArea: chrome.storage.StorageArea) => {
 	return STORAGE_AREA_MAP.has(storageArea) ? STORAGE_AREA_MAP.get(storageArea) : null;
 };
 
-export default function createStorageArea<Q extends Partial<Quota>>(initialStore?: InternalStore | null, quotas?: Q) : chrome.storage.StorageArea & Q {
+export default function createStorageArea<Q extends Partial<Quota>>(initialStore?: InternalStore | null, quotas?: Q) {
 	/**
 	 * Internal quota limits.
 	 */
@@ -353,18 +353,8 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 		set,
 		setAccessLevel,
 		onChanged,
-	} as chrome.storage.StorageArea & Q;
-
-	for (const key in mergedQuotas) {
-		if (Object.hasOwn(mergedQuotas, key)) {
-			const k = mergedQuotas[key as keyof Quota];
-
-			// Do not export infinite quotas
-			if (Number.isFinite(k)) {
-				obj[key as keyof Quota] = k;
-			}
-		}
-	}
+		...quotas,
+	} as (chrome.storage.StorageArea & Q);
 
 	// Store a weak reference to this object for inspection-purposes
 	STORAGE_AREA_MAP.set(obj, {
