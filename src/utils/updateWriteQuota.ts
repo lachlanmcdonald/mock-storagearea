@@ -15,33 +15,42 @@
  * @param writesPerHourCache Cache containing a tally of writes, keyed to the hour
  * @param writesPerMinuteCache Cache containing a tally of writes, keyed to the minute
  */
-export default function updateWriteQuota(maxWritesPerHour: number, maxWritesPerMinute: number, writesPerHourCache: Record<string, number>, writesPerMinuteCache: Record<string, number>, timestamp?: number | null) {
-	const now = new Date(typeof timestamp === 'number' ? timestamp : Date.now());
-	const fullDaysSinceEpoch = Math.floor(now.valueOf() / 86400000);
-	const hourKey = `${ fullDaysSinceEpoch }:${ now.getHours }`;
-	const minuteKey = `${ hourKey }:${ now.getMinutes }`;
+export default function updateWriteQuota(maxWritesPerHour: number, maxWritesPerMinute: number, writesPerHourCache: Map<number, number>, writesPerMinuteCache: Map<number, number>, timestamp?: number) {
+	const hasFiniteMaxWritesPerHour = Number.isFinite(maxWritesPerHour);
+	const hasFiniteMaxWritesPerMinute = Number.isFinite(maxWritesPerMinute);
 
-	if (Number.isFinite(maxWritesPerHour)) {
-		if (Object.hasOwn(writesPerHourCache, hourKey)) {
-			if (writesPerHourCache[hourKey] + 1 > maxWritesPerHour) {
+	if (hasFiniteMaxWritesPerHour && hasFiniteMaxWritesPerMinute) {
+		const now = (typeof timestamp === 'number') ? new Date(timestamp) : new Date();
+
+		const hoursSinceEpoch = Math.floor(now.valueOf() / 3_600_000);
+		const minutesInDay = (now.getHours() * 60) + now.getMinutes();
+
+		if (hasFiniteMaxWritesPerHour) {
+			let v = writesPerHourCache.get(hoursSinceEpoch);
+
+			if (typeof v !== 'number' || Number.isFinite(v) === false) {
+				v = 0;
+			}
+
+			if ((v + 1) > maxWritesPerHour) {
 				throw new Error(`Quota exceeded: MAX_WRITE_OPERATIONS_PER_HOUR (${ maxWritesPerHour }) was exceeded.`);
-			} else {
-				writesPerHourCache[hourKey] += 1;
 			}
-		} else {
-			writesPerHourCache[hourKey] = 1;
-		}
-	}
 
-	if (Number.isFinite(maxWritesPerMinute)) {
-		if (Object.hasOwn(writesPerMinuteCache, minuteKey)) {
-			if (writesPerMinuteCache[minuteKey] + 1 > maxWritesPerMinute) {
-				throw new Error(`Quota exceeded: MAX_WRITE_OPERATIONS_PER_MINUTE (${ maxWritesPerMinute }) was exceeded.`);
-			} else {
-				writesPerMinuteCache[minuteKey] += 1;
+			writesPerHourCache.set(hoursSinceEpoch, v + 1);
+		}
+
+		if (hasFiniteMaxWritesPerMinute) {
+			let v = writesPerMinuteCache.get(minutesInDay);
+
+			if (typeof v !== 'number' || Number.isFinite(v) === false) {
+				v = 0;
 			}
-		} else {
-			writesPerMinuteCache[minuteKey] = 1;
+
+			if ((v + 1) > maxWritesPerMinute) {
+				throw new Error(`Quota exceeded: MAX_WRITE_OPERATIONS_PER_MINUTE (${ maxWritesPerMinute }) was exceeded.`);
+			}
+
+			writesPerMinuteCache.set(minutesInDay, v + 1);
 		}
 	}
 }

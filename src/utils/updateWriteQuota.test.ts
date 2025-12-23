@@ -8,8 +8,8 @@ import updateWriteQuota from './updateWriteQuota';
 const TIMESTAMP = new Date(Date.UTC(2023, 0, 1, 12, 0, 0)).valueOf();
 
 test('Does not throw when below the quota', () => {
-	const writesPerHourCache = {} as Record<string, number>;
-	const writesPerMinuteCache = {} as Record<string, number>;
+	const writesPerHourCache = {} as Map<number, number>;
+	const writesPerMinuteCache = {} as Map<number, number>;
 
 	expect(() => {
 		updateWriteQuota(1, 1, writesPerHourCache, writesPerMinuteCache, TIMESTAMP);
@@ -17,8 +17,8 @@ test('Does not throw when below the quota', () => {
 });
 
 test('Throws when over the the MAX_WRITE_OPERATIONS_PER_MINUTE quota', () => {
-	const writesPerHourCache = {} as Record<string, number>;
-	const writesPerMinuteCache = {} as Record<string, number>;
+	const writesPerHourCache = {} as Map<number, number>;
+	const writesPerMinuteCache = {} as Map<number, number>;
 
 	expect(() => {
 		updateWriteQuota(Infinity, 3, writesPerHourCache, writesPerMinuteCache, TIMESTAMP);
@@ -32,8 +32,8 @@ test('Throws when over the the MAX_WRITE_OPERATIONS_PER_MINUTE quota', () => {
 });
 
 test('Throws when over the the MAX_WRITE_OPERATIONS_PER_HOUR quota', () => {
-	const writesPerHourCache = {} as Record<string, number>;
-	const writesPerMinuteCache = {} as Record<string, number>;
+	const writesPerHourCache = {} as Map<number, number>;
+	const writesPerMinuteCache = {} as Map<number, number>;
 
 	expect(() => {
 		updateWriteQuota(3, Infinity, writesPerHourCache, writesPerMinuteCache, TIMESTAMP);

@@ -40,8 +40,8 @@ const dispatchEvent = (dispatcher: (changes: Record<string, chrome.storage.Stora
 };
 
 const STORAGE_AREA_MAP : WeakMap<chrome.storage.StorageArea, {
-	writeOperationsPerHour: Record<string, number>,
-	writeOperationsPerMinute: Record<string, number>,
+	writeOperationsPerHour: Map<number, number>,
+	writeOperationsPerMinute: Map<number, number>,
 	quota: Quota,
 	store: InternalStore,
 }> = new WeakMap();
@@ -76,13 +76,13 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 	 * A key-value pair, key represents a range of time (i.e. the current hour) and
 	 * value is the number of operations performed for that range.
 	 */
-	const writeOperationsPerHour = {} as Record<string, number>;
+	const writeOperationsPerHour = {} as Map<number, number>;
 
 	/**
 	 * A key-value pair, key represents a range of time (i.e. the current hour) and
 	 * value is the number of operations performed for that range.
 	 */
-	const writeOperationsPerMinute = {} as Record<string, number>;
+	const writeOperationsPerMinute = {} as Map<number, number>;
 
 	async function getKeys() {
 		return Array.from(await store.keys());
