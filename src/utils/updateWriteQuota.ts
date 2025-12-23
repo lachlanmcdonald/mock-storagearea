@@ -19,7 +19,7 @@ export default function updateWriteQuota(maxWritesPerHour: number, maxWritesPerM
 	const hasFiniteMaxWritesPerHour = Number.isFinite(maxWritesPerHour);
 	const hasFiniteMaxWritesPerMinute = Number.isFinite(maxWritesPerMinute);
 
-	if (hasFiniteMaxWritesPerHour && hasFiniteMaxWritesPerMinute) {
+	if (hasFiniteMaxWritesPerHour || hasFiniteMaxWritesPerMinute) {
 		const now = (typeof timestamp === 'number') ? new Date(timestamp) : new Date();
 
 		const hoursSinceEpoch = Math.floor(now.valueOf() / 3_600_000);
