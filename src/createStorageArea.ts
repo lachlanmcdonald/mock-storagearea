@@ -76,13 +76,13 @@ export default function createStorageArea<Q extends Partial<Quota>>(initialStore
 	 * A key-value pair, key represents a range of time (i.e. the current hour) and
 	 * value is the number of operations performed for that range.
 	 */
-	const writeOperationsPerHour = {} as Map<number, number>;
+	const writeOperationsPerHour: Map<number, number> = new Map();
 
 	/**
 	 * A key-value pair, key represents a range of time (i.e. the current hour) and
 	 * value is the number of operations performed for that range.
 	 */
-	const writeOperationsPerMinute = {} as Map<number, number>;
+	const writeOperationsPerMinute: Map<number, number> = new Map();
 
 	async function getKeys() {
 		return Array.from(await store.keys());
